@@ -50,7 +50,7 @@ public @interface Activate {
      * @return group names to match
      * @see ExtensionLoader#getActivateExtension(URL, String, String)
      */
-    String[] group() default {};
+    String[] group() default {};        // 修饰的实现类是在 Provider 端被激活还是在 Consumer 端被激活。
 
     /**
      * Activate the current extension when the specified keys appear in the URL's parameters.
@@ -63,7 +63,7 @@ public @interface Activate {
      * @see ExtensionLoader#getActivateExtension(URL, String)
      * @see ExtensionLoader#getActivateExtension(URL, String, String)
      */
-    String[] value() default {};
+    String[] value() default {};        // 修饰的实现类只在 URL 参数中出现指定的 key 时才会被激活。
 
     /**
      * Relative ordering info, optional
@@ -90,5 +90,5 @@ public @interface Activate {
      *
      * @return absolute ordering info
      */
-    int order() default 0;
+    int order() default 0;          // 用来确定扩展实现类的排序。
 }

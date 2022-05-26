@@ -32,25 +32,13 @@ import org.apache.dubbo.remoting.zookeeper.ZookeeperClient;
 import org.apache.dubbo.remoting.zookeeper.ZookeeperTransporter;
 import org.apache.dubbo.rpc.RpcException;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.CountDownLatch;
 
-import static org.apache.dubbo.common.constants.CommonConstants.ANY_VALUE;
-import static org.apache.dubbo.common.constants.CommonConstants.CHECK_KEY;
-import static org.apache.dubbo.common.constants.CommonConstants.INTERFACE_KEY;
-import static org.apache.dubbo.common.constants.CommonConstants.PATH_SEPARATOR;
-import static org.apache.dubbo.common.constants.RegistryConstants.CONFIGURATORS_CATEGORY;
-import static org.apache.dubbo.common.constants.RegistryConstants.CONSUMERS_CATEGORY;
-import static org.apache.dubbo.common.constants.RegistryConstants.DEFAULT_CATEGORY;
-import static org.apache.dubbo.common.constants.RegistryConstants.DYNAMIC_KEY;
-import static org.apache.dubbo.common.constants.RegistryConstants.PROVIDERS_CATEGORY;
-import static org.apache.dubbo.common.constants.RegistryConstants.ROUTERS_CATEGORY;
+import static org.apache.dubbo.common.constants.CommonConstants.*;
+import static org.apache.dubbo.common.constants.RegistryConstants.*;
 
 /**
  * ZookeeperRegistry
@@ -127,6 +115,7 @@ public class ZookeeperRegistry extends CacheableFailbackRegistry {
     public void doRegister(URL url) {
         try {
             checkDestroyed();
+            // toUrlPath 根据传入信息确定在 Zookeeper 上创建节点的位置
             zkClient.create(toUrlPath(url), url.getParameter(DYNAMIC_KEY, true));
         } catch (Throwable e) {
             throw new RpcException("Failed to register " + url + " to zookeeper " + getUrl() + ", cause: " + e.getMessage(), e);
@@ -175,7 +164,8 @@ public class ZookeeperRegistry extends CacheableFailbackRegistry {
                 CountDownLatch latch = new CountDownLatch(1);
                 try {
                     List<URL> urls = new ArrayList<>();
-                    for (String path : toCategoriesPath(url)) {
+                    for (String path : toCategoriesPath(url)) {     // toCategoriesPath 将 URL 参数整理成一个 ZooKeeper 路径
+                        // 获取 url 对应的 Map，如果 url 对应 null，则新建一个 Map 映射，并返回新 Map
                         ConcurrentMap<NotifyListener, ChildListener> listeners = zkListeners.computeIfAbsent(url, k -> new ConcurrentHashMap<>());
                         ChildListener zkListener = listeners.computeIfAbsent(listener, k -> new RegistryChildListenerImpl(url, path, k, latch));
                         if (zkListener instanceof RegistryChildListenerImpl) {

@@ -25,6 +25,10 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
+ * Adaptive 注解还可以加到接口方法之上，Dubbo 会动态生成适配器类。
+ *
+ * 实现原理：{@link ExtensionLoader#getAdaptiveExtension()}
+ *
  * Provide helpful information for {@link ExtensionLoader} to inject dependency extension instance.
  *
  * @see ExtensionLoader
@@ -33,7 +37,7 @@ import java.lang.annotation.Target;
 @Documented
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.TYPE, ElementType.METHOD})
-public @interface Adaptive {
+public @interface Adaptive {        // 与 URL 一起选择合适的扩展实现类
     /**
      * Decide which target extension to be injected. The name of the target extension is decided by the parameter passed
      * in the URL, and the parameter names are given by this method.

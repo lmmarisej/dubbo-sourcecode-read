@@ -80,6 +80,8 @@ import static org.apache.dubbo.common.constants.RegistryConstants.CATEGORY_KEY;
 import static org.apache.dubbo.common.utils.StringUtils.isBlank;
 
 /**
+ * URL 一个很重要的作用就是与 @Adaptive 注解一起选择合适的扩展实现类。
+ *
  * URL - Uniform Resource Locator (Immutable, ThreadSafe)
  * <p>
  * url example:

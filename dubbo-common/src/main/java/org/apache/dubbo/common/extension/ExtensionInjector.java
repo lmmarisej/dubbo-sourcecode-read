@@ -17,6 +17,8 @@
 package org.apache.dubbo.common.extension;
 
 /**
+ * 扩展实例对象注入工具。
+ *
  * An injector to provide resources for SPI extension.
  */
 @SPI(scope = ExtensionScope.SELF)

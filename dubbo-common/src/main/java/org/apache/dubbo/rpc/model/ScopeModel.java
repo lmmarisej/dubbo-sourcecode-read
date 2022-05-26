@@ -67,7 +67,7 @@ public abstract class ScopeModel implements ExtensionAccessor {
 
     private ExtensionDirector extensionDirector;
 
-    private ScopeBeanFactory beanFactory;
+    private ScopeBeanFactory beanFactory;       // 工厂中实例可被注入 Adaptive 生成的实例
     private List<ScopeModelDestroyListener> destroyListeners;
 
     private Map<String, Object> attributes;

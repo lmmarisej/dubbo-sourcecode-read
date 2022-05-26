@@ -20,6 +20,10 @@ import org.apache.dubbo.common.extension.ExtensionScope;
 import org.apache.dubbo.common.extension.SPI;
 
 /**
+ * Filter 接口有非常多的扩展实现类，在一个场景中可能需要某几个 Filter 扩展实现类协同工作，而另一个场景中可能需要另外几个实现类一起工作。
+ *
+ * 这样，就需要一套配置来指定当前场景中哪些 Filter 实现是可用的，这就是 @Activate 注解要做的事情。
+ *
  * Extension for intercepting the invocation for both service provider and consumer, furthermore, most of
  * functions in dubbo are implemented base on the same mechanism. Since every time when remote method is
  * invoked, the filter extensions will be executed too, the corresponding penalty should be considered before

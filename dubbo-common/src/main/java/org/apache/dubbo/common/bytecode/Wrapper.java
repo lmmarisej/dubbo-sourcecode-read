@@ -16,30 +16,31 @@
  */
 package org.apache.dubbo.common.bytecode;
 
-import org.apache.dubbo.common.utils.ClassUtils;
-import org.apache.dubbo.common.utils.ReflectUtils;
-
 import javassist.ClassPool;
 import javassist.CtMethod;
 import javassist.LoaderClassPath;
+import org.apache.dubbo.common.extension.ExtensionLoader;
+import org.apache.dubbo.common.utils.ClassUtils;
+import org.apache.dubbo.common.utils.ReflectUtils;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.regex.Matcher;
 import java.util.stream.Collectors;
 
 /**
- * Wrapper.
+ * Dubbo 提供的自动包装特性，解决一个扩展接口可能有多个扩展实现类的重复代码问题。
+ * <p>
+ * Dubbo 将多个扩展实现类的公共逻辑，抽象到 Wrapper 类中。
+ * <p>
+ * Wrapper 类与普通的扩展实现类一样，也实现了扩展接口，在获取真正的扩展实现对象时，在其外面包装一层 Wrapper 对象，你可以理解成一层装饰器。
+ *
+ * @see ExtensionLoader
  */
 public abstract class Wrapper {
     private static final Map<Class<?>, Wrapper> WRAPPER_MAP = new ConcurrentHashMap<Class<?>, Wrapper>(); //class wrapper map
@@ -171,16 +172,16 @@ public abstract class Wrapper {
         }
 
         Method[] methods = Arrays.stream(c.getMethods())
-                                 .filter(method -> allMethod.contains(ReflectUtils.getDesc(method)))
-                                 .collect(Collectors.toList())
-                                 .toArray(new Method[] {});
+            .filter(method -> allMethod.contains(ReflectUtils.getDesc(method)))
+            .collect(Collectors.toList())
+            .toArray(new Method[]{});
         // get all public method.
         boolean hasMethod = ClassUtils.hasMethods(methods);
         if (hasMethod) {
             Map<String, Integer> sameNameMethodCount = new HashMap<>((int) (methods.length / 0.75f) + 1);
             for (Method m : methods) {
                 sameNameMethodCount.compute(m.getName(),
-                        (key, oldValue) -> oldValue == null ? 1 : oldValue + 1);
+                    (key, oldValue) -> oldValue == null ? 1 : oldValue + 1);
             }
 
             c3.append(" try{");
@@ -200,7 +201,7 @@ public abstract class Wrapper {
                     if (len > 0) {
                         for (int l = 0; l < len; l++) {
                             c3.append(" && ").append(" $3[").append(l).append("].getName().equals(\"")
-                                    .append(m.getParameterTypes()[l].getName()).append("\")");
+                                .append(m.getParameterTypes()[l].getName()).append("\")");
                         }
                     }
                 }

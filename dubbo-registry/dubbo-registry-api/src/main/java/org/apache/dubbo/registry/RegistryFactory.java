@@ -24,6 +24,8 @@ import static org.apache.dubbo.common.constants.CommonConstants.PROTOCOL_KEY;
 import static org.apache.dubbo.common.extension.ExtensionScope.APPLICATION;
 
 /**
+ * 工厂方法模式。RegistryFactory 作为扩展点，用于根据 URL 信息动态生成 Registry。
+ *
  * RegistryFactory. (SPI, Singleton, ThreadSafe)
  *
  * @see org.apache.dubbo.registry.support.AbstractRegistryFactory
@@ -46,6 +48,6 @@ public interface RegistryFactory {
      * @return Registry reference, never return empty value
      */
     @Adaptive({PROTOCOL_KEY})
-    Registry getRegistry(URL url);
+    Registry getRegistry(URL url);      // 适配器方法，在运行时会为其动态生成相应的 “$Adaptive” 类型
 
 }

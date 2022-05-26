@@ -23,7 +23,6 @@ import org.apache.dubbo.common.extension.SPI;
 import org.apache.dubbo.common.logger.Logger;
 import org.apache.dubbo.common.logger.LoggerFactory;
 import org.apache.dubbo.common.utils.StringUtils;
-
 import org.springframework.beans.factory.ListableBeanFactory;
 import org.springframework.context.ApplicationContext;
 
@@ -72,6 +71,9 @@ public class SpringExtensionInjector implements ExtensionInjector, Lifecycle {
         this.context = context;
     }
 
+    /**
+     * 从 Spring IoC 中取值指定 byName | byType 进行注入。
+     */
     @Override
     @SuppressWarnings("unchecked")
     public <T> T getInstance(Class<T> type, String name) {
@@ -82,7 +84,7 @@ public class SpringExtensionInjector implements ExtensionInjector, Lifecycle {
         }
 
         //check @SPI annotation
-        if (type.isInterface() && type.isAnnotationPresent(SPI.class)) {
+        if (type.isInterface() && type.isAnnotationPresent(SPI.class)) {        // 禁止处理 @SPI 接口
             return null;
         }
 
@@ -95,6 +97,10 @@ public class SpringExtensionInjector implements ExtensionInjector, Lifecycle {
         return null;
     }
 
+    /**
+     * 优先 byName 注入，失败 byType 注入。
+     */
+    @SuppressWarnings("ConstantConditions")
     private <T> T getOptionalBean(ListableBeanFactory beanFactory, String name, Class<T> type) {
         if (StringUtils.isEmpty(name)) {
             String[] beanNamesForType = beanFactory.getBeanNamesForType(type, true, false);

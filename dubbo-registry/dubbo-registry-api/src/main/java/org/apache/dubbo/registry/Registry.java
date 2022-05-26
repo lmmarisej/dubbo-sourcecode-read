@@ -23,6 +23,8 @@ import static org.apache.dubbo.common.constants.CommonConstants.DEFAULT_DELAY_NO
 import static org.apache.dubbo.common.constants.CommonConstants.REGISTRY_DELAY_NOTIFICATION_KEY;
 
 /**
+ * 对注册中心的抽象。
+ *
  * Registry. (SPI, Prototype, ThreadSafe)
  *
  * @see org.apache.dubbo.registry.RegistryFactory#getRegistry(URL)
