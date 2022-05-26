@@ -40,10 +40,12 @@ public class Application {
     }
 
     private static void runWithBootstrap() {
+        // 创建一个 ServiceConfig 的实例，泛型参数是业务接口实现类， 即 DemoServiceImpl
         ReferenceConfig<DemoService> reference = new ReferenceConfig<>();
-        reference.setInterface(DemoService.class);
+        reference.setInterface(DemoService.class);          // 指定业务接口
         reference.setGeneric("true");
 
+        // 创建 DubboBootstrap，指定 ApplicationConfig 以及 RegistryConfig
         DubboBootstrap bootstrap = DubboBootstrap.getInstance();
         bootstrap.application(new ApplicationConfig("dubbo-demo-api-consumer"))
             .registry(new RegistryConfig("zookeeper://127.0.0.1:2181"))
@@ -51,6 +53,7 @@ public class Application {
             .reference(reference)
             .start();
 
+        // 获取 DemoService 实例并调用其方法
         DemoService demoService = bootstrap.getCache().get(reference);
         String message = demoService.sayHello("dubbo");
         System.out.println(message);

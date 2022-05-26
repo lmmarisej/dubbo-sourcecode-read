@@ -18,7 +18,6 @@ package org.apache.dubbo.demo.provider;
 
 import org.apache.dubbo.config.RegistryConfig;
 import org.apache.dubbo.config.spring.context.annotation.EnableDubbo;
-
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -26,14 +25,15 @@ import org.springframework.context.annotation.PropertySource;
 
 public class Application {
     public static void main(String[] args) throws Exception {
+        // 使用 AnnotationConfigApplicationContext 初始化 Spring 容器， 从 ProviderConfiguration 这个类的注解上拿相关配置信息
         AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext(ProviderConfiguration.class);
         context.start();
         System.in.read();
     }
 
     @Configuration
-    @EnableDubbo(scanBasePackages = "org.apache.dubbo.demo.provider")
-    @PropertySource("classpath:/spring/dubbo-provider.properties")
+    @EnableDubbo(scanBasePackages = "org.apache.dubbo.demo.provider")   // @EnableDubbo 注解指定包下的 Bean 都会被 dubbo 扫描，并做 Dubbo 服务暴露出去
+    @PropertySource("classpath:/spring/dubbo-provider.properties")      // @PropertySource 注解指定了其他配置信息
     static class ProviderConfiguration {
         @Bean
         public RegistryConfig registryConfig() {

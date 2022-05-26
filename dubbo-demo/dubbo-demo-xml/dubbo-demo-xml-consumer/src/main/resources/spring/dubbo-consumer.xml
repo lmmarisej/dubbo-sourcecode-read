@@ -26,17 +26,16 @@
 
     <dubbo:metadata-report address="zookeeper://127.0.0.1:2181"/>
 
+    <!--注册中心-->
     <dubbo:registry id="demo1" address="zookeeper://127.0.0.1:2181?registry-type=service"/>
 
+    <!--从根据配置信息，从注册中心拉取服务提供者的信息，根据服务提供者信息生成该 bean 接口的代理实现，最后注入 IoC 容器-->
     <dubbo:reference id="demoService" check="false"
                      interface="org.apache.dubbo.demo.DemoService"/>
-
     <dubbo:reference version="1.0.0" group="greeting" id="greetingService" check="false"
                      interface="org.apache.dubbo.demo.GreetingService"/>
-
     <dubbo:reference version="1.0.0" id="restDemoService" check="false"
                      interface="org.apache.dubbo.demo.RestDemoService"/>
-
     <dubbo:reference version="1.0.0" id="tripleService" check="false"
                      interface="org.apache.dubbo.demo.TripleService"/>
 

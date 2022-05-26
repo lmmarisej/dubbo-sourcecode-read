@@ -112,6 +112,14 @@
                 <spring-boot.version>2.2.8.RELEASE</spring-boot.version>
             </properties>
         </profile>
+
+        <profile>
+            <!-- Spring Boot 2.3 -->
+            <id>spring-boot-2.3</id>
+            <properties>
+                <spring-boot.version>2.3.1.RELEASE</spring-boot.version>
+            </properties>
+        </profile>
     </profiles>
 
     <build>

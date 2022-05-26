@@ -43,9 +43,10 @@ public class Application {
     private static void startWithBootstrap() {
         ServiceConfig<DemoServiceImpl> service = new ServiceConfig<>();
         service.setInterface(DemoService.class);
-        service.setRef(new DemoServiceImpl());
+        service.setRef(new DemoServiceImpl());      // 指定业务接口的实现，由该对象来处理 Consumer 的请求
 
-        DubboBootstrap bootstrap = DubboBootstrap.getInstance();
+        DubboBootstrap bootstrap = DubboBootstrap.getInstance();    // 获取 DubboBootstrap 实例，这是个单例的对象
+        //生成一个 ApplicationConfig 的实例、指定 ZK 地址以及 ServiceConfig 实例
         bootstrap.application(new ApplicationConfig("dubbo-demo-api-provider"))
             .registry(new RegistryConfig("zookeeper://127.0.0.1:2181"))
             .protocol(new ProtocolConfig(CommonConstants.DUBBO, -1))

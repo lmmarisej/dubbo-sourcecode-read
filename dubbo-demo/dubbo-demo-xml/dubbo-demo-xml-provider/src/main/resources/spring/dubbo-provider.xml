@@ -21,24 +21,33 @@
        xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-4.3.xsd
        http://dubbo.apache.org/schema/dubbo http://dubbo.apache.org/schema/dubbo/dubbo.xsd">
 
-    <dubbo:application name="demo-provider" >
+    <!--指定当前 dubbo 服务提供者的名称-->
+    <dubbo:application name="demo-provider">
     </dubbo:application>
 
     <dubbo:config-center address="zookeeper://127.0.0.1:2181"/>
     <dubbo:metadata-report address="zookeeper://127.0.0.1:2181"/>
+
+    <!-- 注册中心指向 Zookeeper 地址 -->
     <dubbo:registry id="registry1" address="zookeeper://127.0.0.1:2181?registry-type=service"/>
 
+    <!--指定 dubbo 不同协议在本地的端口号-->
     <dubbo:protocol name="dubbo" port="-1"/>
     <dubbo:protocol name="rest" port="-1"/>
     <dubbo:protocol name="tri" port="-1"/>
 
+    <!--将接口实现注册到本地 IoC 容器-->
     <bean id="demoService" class="org.apache.dubbo.demo.provider.DemoServiceImpl"/>
     <bean id="greetingService" class="org.apache.dubbo.demo.provider.GreetingServiceImpl"/>
     <bean id="restDemoService" class="org.apache.dubbo.demo.provider.RestDemoServiceImpl"/>
     <bean id="tripleService" class="org.apache.dubbo.demo.provider.TripleServiceImpl"/>
 
-    <dubbo:service delay="5000" interface="org.apache.dubbo.demo.DemoService" timeout="3000" ref="demoService" registry="registry1" protocol="dubbo"/>
-    <dubbo:service delay="5000" version="1.0.0" group="greeting" timeout="5000" interface="org.apache.dubbo.demo.GreetingService"
+    <!--将本地 IoC 容器中的 bean 信息暴露服务到指定的注册中心-->
+    <dubbo:service delay="5000" timeout="3000"
+                   interface="org.apache.dubbo.demo.DemoService" ref="demoService" registry="registry1"
+                   protocol="dubbo"/>
+    <dubbo:service delay="5000" version="1.0.0" group="greeting" timeout="5000"
+                   interface="org.apache.dubbo.demo.GreetingService"
                    ref="greetingService" protocol="dubbo"/>
     <dubbo:service delay="5000" version="1.0.0" timeout="5000" interface="org.apache.dubbo.demo.RestDemoService"
                    ref="restDemoService" protocol="rest"/>

@@ -25,7 +25,7 @@ import java.util.concurrent.CompletableFuture;
 
 @Component("demoServiceComponent")
 public class DemoServiceComponent implements DemoService {
-    @DubboReference
+    @DubboReference                      // 注入Dubbo服务
     private DemoService demoService;
 
     @Override
