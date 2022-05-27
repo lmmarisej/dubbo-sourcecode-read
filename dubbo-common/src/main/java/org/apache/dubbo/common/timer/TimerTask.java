@@ -19,6 +19,8 @@ package org.apache.dubbo.common.timer;
 import java.util.concurrent.TimeUnit;
 
 /**
+ * 一个定时任务。
+ *
  * A task which is executed after the delay specified with
  * {@link Timer#newTimeout(TimerTask, long, TimeUnit)} (TimerTask, long, TimeUnit)}.
  */
@@ -28,7 +30,7 @@ public interface TimerTask {
      * Executed after the delay specified with
      * {@link Timer#newTimeout(TimerTask, long, TimeUnit)}.
      *
-     * @param timeout a handle which is associated with this task
+     * @param timeout a handle which is associated with this task  此任务创建时返回给调用者的句柄
      */
     void run(Timeout timeout) throws Exception;
 }

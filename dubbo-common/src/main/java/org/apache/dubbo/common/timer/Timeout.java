@@ -17,8 +17,11 @@
 package org.apache.dubbo.common.timer;
 
 /**
- * A handle associated with a {@link TimerTask} that is returned by a
- * {@link Timer}.
+ * 定时任务句柄，包含在时间轮上所在的槽信息。
+ *
+ * 查看定时任务的状态，还可以操作定时任务。
+ *
+ * A handle associated with a {@link TimerTask} that is returned by a {@link Timer}.
  */
 public interface Timeout {
 
@@ -32,6 +35,8 @@ public interface Timeout {
      */
     TimerTask task();
 
+    // is 主要用于检查当前 定时任务的 状态
+
     /**
      * Returns {@code true} if and only if the {@link TimerTask} associated
      * with this handle has been expired.
@@ -39,12 +44,13 @@ public interface Timeout {
     boolean isExpired();
 
     /**
-     * Returns {@code true} if and only if the {@link TimerTask} associated
-     * with this handle has been cancelled.
+     * Returns {@code true} if and only if the {@link TimerTask} associated with this handle has been cancelled.
      */
     boolean isCancelled();
 
     /**
+     * 取消当前任务。
+     *
      * Attempts to cancel the {@link TimerTask} associated with this handle.
      * If the task has been executed or cancelled already, it will return with
      * no side effect.

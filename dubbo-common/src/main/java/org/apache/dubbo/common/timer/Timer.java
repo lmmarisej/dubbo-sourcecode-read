@@ -21,8 +21,11 @@ import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.TimeUnit;
 
 /**
- * Schedules {@link TimerTask}s for one-time future execution in a background
- * thread.
+ * 一个定时器。
+ *
+ * 在 dubbo 中，事件轮是其唯一实现，因此我们可以将 Timer 理解为线程池。只不过是带定时支持的线程池。
+ *
+ * Schedules {@link TimerTask}s for one-time future execution in a background thread.
  */
 public interface Timer {
 
