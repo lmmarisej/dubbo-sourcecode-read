@@ -34,7 +34,7 @@ import static org.apache.dubbo.registry.Constants.REGISTRY_RETRY_PERIOD_KEY;
 import static org.apache.dubbo.registry.Constants.REGISTRY_RETRY_TIMES_KEY;
 
 /**
- * AbstractRetryTask
+ * 在 AbstractRetryTask 中维护了当前任务关联的 URL、当前重试的次数等信息
  */
 public abstract class AbstractRetryTask implements TimerTask {
 
@@ -93,6 +93,9 @@ public abstract class AbstractRetryTask implements TimerTask {
         return cancel;
     }
 
+    /**
+     * 将当前任务重新放入时间轮中，并递增当前任务的执行次数。
+     */
     protected void reput(Timeout timeout, long tick) {
         if (timeout == null) {
             throw new IllegalArgumentException();
@@ -106,6 +109,9 @@ public abstract class AbstractRetryTask implements TimerTask {
         timer.newTimeout(timeout.task(), tick, TimeUnit.MILLISECONDS);
     }
 
+    /**
+     * 会根据重试 URL 中指定的重试次数（retry.times 参数，默认值为 3）、任务是否被取消以及时间轮的状态
+     */
     @Override
     public void run(Timeout timeout) throws Exception {
         if (timeout.isCancelled() || timeout.timer().isStop() || isCancel()) {
@@ -125,6 +131,8 @@ public abstract class AbstractRetryTask implements TimerTask {
         } catch (Throwable t) { // Ignore all the exceptions and wait for the next retry
             logger.warn("Failed to execute task " + taskName + ", url: " + url + ", waiting for again, cause:" + t.getMessage(), t);
             // reput this task when catch exception.
+            // 任务的 doRetry() 方法执行出现异常
+
             reput(timeout, retryPeriod);
         }
     }
