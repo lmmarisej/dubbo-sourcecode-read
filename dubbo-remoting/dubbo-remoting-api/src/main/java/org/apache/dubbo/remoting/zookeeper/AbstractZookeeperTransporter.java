@@ -33,21 +33,21 @@ import java.util.concurrent.ConcurrentHashMap;
 import static org.apache.dubbo.common.constants.CommonConstants.TIMEOUT_KEY;
 
 /**
+ * 缓存 ZookeeperClient 实例；
+ * 在某个 Zookeeper 节点无法连接时，切换到备用 Zookeeper 地址。
+ *
+ * zookeeper://127.0.0.1:2181/org.apache.dubbo.registry.RegistryService?backup=127.0.0.1:8989,127.0.0.1:9999
+ *
  * AbstractZookeeperTransporter is abstract implements of ZookeeperTransporter.
  * <p>
  * If you want to extend this, implements createZookeeperClient.
  */
 public abstract class AbstractZookeeperTransporter implements ZookeeperTransporter {
     private static final Logger logger = LoggerFactory.getLogger(ZookeeperTransporter.class);
+    // 如果查找失败，则创建一个新的 ZookeeperClient 实例返回并更新 ZookeeperClientMap 缓存。
     private final Map<String, ZookeeperClient> zookeeperClientMap = new ConcurrentHashMap<>();
 
     /**
-     * share connnect for registry, metadata, etc..
-     * <p>
-     * Make sure the connection is connected.
-     *
-     * @param url
-     * @return
      */
     @Override
     public ZookeeperClient connect(URL url) {
@@ -55,6 +55,7 @@ public abstract class AbstractZookeeperTransporter implements ZookeeperTransport
         // address format: {[username:password@]address}
         List<String> addressList = getURLBackupAddress(url);
         // The field define the zookeeper server , including protocol, host, port, username, password
+        // 如果查找成功，则复用 ZookeeperClient 实例
         if ((zookeeperClient = fetchAndUpdateZookeeperClientCache(addressList)) != null && zookeeperClient.isConnected()) {
             logger.info("find valid zookeeper client from the cache for address: " + url);
             return zookeeperClient;
@@ -77,7 +78,6 @@ public abstract class AbstractZookeeperTransporter implements ZookeeperTransport
      * @param url the url that will create zookeeper connection .
      *            The url in AbstractZookeeperTransporter#connect parameter is rewritten by this one.
      *            such as: zookeeper://127.0.0.1:2181/org.apache.dubbo.remoting.zookeeper.ZookeeperTransporter
-     * @return
      */
     protected abstract ZookeeperClient createZookeeperClient(URL url);
 
@@ -85,9 +85,6 @@ public abstract class AbstractZookeeperTransporter implements ZookeeperTransport
      * get the ZookeeperClient from cache, the ZookeeperClient must be connected.
      * <p>
      * It is not private method for unit test.
-     *
-     * @param addressList
-     * @return
      */
     public ZookeeperClient fetchAndUpdateZookeeperClientCache(List<String> addressList) {
 
@@ -111,7 +108,7 @@ public abstract class AbstractZookeeperTransporter implements ZookeeperTransport
      * @return such as 127.0.0.1:2181,127.0.0.1:8989,127.0.0.1:9999
      */
     public List<String> getURLBackupAddress(URL url) {
-        List<String> addressList = new ArrayList<String>();
+        List<String> addressList = new ArrayList<>();
         addressList.add(url.getAddress());
         addressList.addAll(url.getParameter(RemotingConstants.BACKUP_KEY, Collections.EMPTY_LIST));
 

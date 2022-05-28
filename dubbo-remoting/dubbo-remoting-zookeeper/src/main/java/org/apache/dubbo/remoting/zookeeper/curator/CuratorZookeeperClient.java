@@ -61,7 +61,7 @@ public class CuratorZookeeperClient extends AbstractZookeeperClient<CuratorZooke
 
     private static final Charset CHARSET = StandardCharsets.UTF_8;
     private final CuratorFramework client;
-    private static Map<String, NodeCache> nodeCacheMap = new ConcurrentHashMap<>();
+    private static final Map<String, NodeCache> nodeCacheMap = new ConcurrentHashMap<>();
 
     public CuratorZookeeperClient(URL url) {
         super(url);
@@ -69,18 +69,18 @@ public class CuratorZookeeperClient extends AbstractZookeeperClient<CuratorZooke
             int timeout = url.getParameter(TIMEOUT_KEY, DEFAULT_CONNECTION_TIMEOUT_MS);
             int sessionExpireMs = url.getParameter(SESSION_KEY, DEFAULT_SESSION_TIMEOUT_MS);
             CuratorFrameworkFactory.Builder builder = CuratorFrameworkFactory.builder()
-                    .connectString(url.getBackupAddress())
-                    .retryPolicy(new RetryNTimes(1, 1000))
-                    .connectionTimeoutMs(timeout)
-                    .sessionTimeoutMs(sessionExpireMs);
+                    .connectString(url.getBackupAddress())      // zk 地址(包括备用地址)
+                    .retryPolicy(new RetryNTimes(1, 1000))   // 重试配置
+                    .connectionTimeoutMs(timeout)           // 连接超时时长
+                    .sessionTimeoutMs(sessionExpireMs);      // session过期时间
             String userInformation = url.getUserInformation();
             if (StringUtils.isNotEmpty(userInformation)) {
-                builder = builder.authorization("digest", userInformation.getBytes());
+                builder = builder.authorization("digest", userInformation.getBytes());  // 处理身份验证
             }
             client = builder.build();
-            client.getConnectionStateListenable().addListener(new CuratorConnectionStateListener(url));
+            client.getConnectionStateListenable().addListener(new CuratorConnectionStateListener(url));  // 添加连接状态的监听
             client.start();
-            boolean connected = client.blockUntilConnected(timeout, TimeUnit.MILLISECONDS);
+            boolean connected = client.blockUntilConnected(timeout, TimeUnit.MILLISECONDS); // 检测 connected 这个返回值，连接失败抛出异常
             if (!connected) {
                 throw new IllegalStateException("zookeeper not connected");
             }

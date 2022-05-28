@@ -22,15 +22,18 @@ import org.apache.dubbo.common.config.configcenter.ConfigItem;
 import java.util.List;
 import java.util.concurrent.Executor;
 
+/**
+ * ZookeeperClient 接口是 Dubbo 封装的 Zookeeper 客户端，该接口定义了大量的方法，都是用来与 Zookeeper 进行交互的。
+ */
 public interface ZookeeperClient {
 
-    void create(String path, boolean ephemeral);
+    void create(String path, boolean ephemeral);        // 创建 ZNode 节点，还提供了创建临时 ZNode 节点的重载方法。
 
-    void delete(String path);
+    void delete(String path);       // 删除节点。
 
     List<String> getChildren(String path);
 
-    List<String> addChildListener(String path, ChildListener listener);
+    List<String> addChildListener(String path, ChildListener listener);     // 添加/删除监听器。
 
     /**
      * @param path:    directory. All child of path will be listened.
@@ -55,7 +58,7 @@ public interface ZookeeperClient {
 
     boolean isConnected();
 
-    void close();
+    void close();       // 关闭当前 ZookeeperClient 实例。
 
     URL getUrl();
 

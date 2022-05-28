@@ -132,6 +132,9 @@ public class ZookeeperRegistry extends CacheableFailbackRegistry {
         }
     }
 
+    /**
+     * 监听所有 Service 层节点的订阅请求。
+     */
     @Override
     public void doSubscribe(final URL url, final NotifyListener listener) {
         try {
