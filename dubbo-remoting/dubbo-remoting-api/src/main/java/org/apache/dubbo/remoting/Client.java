@@ -19,6 +19,11 @@ package org.apache.dubbo.remoting;
 import org.apache.dubbo.common.Resetable;
 
 /**
+ * 将发起请求的 Endpoint 抽象为客户端（Client）。
+ *
+ * Client 和 Server 本身都是 Endpoint，只不过在语义上区分了请求和响应的职责。
+ * Client 和 Server 的主要区别是 Client 只能关联一个 Channel，而 Server 可以接收多个 Client 发起的 Channel 连接。
+ *
  * Remoting Client. (API/SPI, Prototype, ThreadSafe)
  * <p>
  * <a href="http://en.wikipedia.org/wiki/Client%E2%80%93server_model">Client/Server</a>

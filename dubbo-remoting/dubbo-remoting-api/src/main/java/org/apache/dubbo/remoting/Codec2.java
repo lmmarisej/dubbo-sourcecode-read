@@ -26,15 +26,19 @@ import java.io.IOException;
 @SPI(scope = ExtensionScope.FRAMEWORK)
 public interface Codec2 {
 
-    @Adaptive({Constants.CODEC_KEY})
+    @Adaptive({Constants.CODEC_KEY})        // 会生成适配器类
     void encode(Channel channel, ChannelBuffer buffer, Object message) throws IOException;
 
     @Adaptive({Constants.CODEC_KEY})
     Object decode(Channel channel, ChannelBuffer buffer) throws IOException;
 
 
+    /**
+     * 在处理 TCP 传输时粘包和拆包使用。
+     */
     enum DecodeResult {
-        NEED_MORE_INPUT, SKIP_SOME_INPUT
+        NEED_MORE_INPUT,    // 当前能读取到的数据不足以构成一个消息时，就会使用 NEED_MORE_INPUT 这个枚举。
+        SKIP_SOME_INPUT
     }
 
 }

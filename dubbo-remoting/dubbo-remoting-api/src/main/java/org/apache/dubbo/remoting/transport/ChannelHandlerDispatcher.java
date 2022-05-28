@@ -27,13 +27,15 @@ import java.util.Collection;
 import java.util.concurrent.CopyOnWriteArraySet;
 
 /**
- * ChannelListenerDispatcher
+ * Dispatcher 模式。
+ *
+ * 所有的 ChannelHandler 接口实现都会调用其中每个 ChannelHandler 元素的相应方法。
  */
 public class ChannelHandlerDispatcher implements ChannelHandler {
 
     private static final Logger logger = LoggerFactory.getLogger(ChannelHandlerDispatcher.class);
 
-    private final Collection<ChannelHandler> channelHandlers = new CopyOnWriteArraySet<ChannelHandler>();
+    private final Collection<ChannelHandler> channelHandlers = new CopyOnWriteArraySet<>();
 
     public ChannelHandlerDispatcher() {
     }

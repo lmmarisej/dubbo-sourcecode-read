@@ -22,6 +22,8 @@ import java.net.InetSocketAddress;
 import java.util.Collection;
 
 /**
+ * 将接收请求的 Endpoint 抽象为服务端（Server）。
+ *
  * Remoting Server. (API/SPI, Prototype, ThreadSafe)
  * <p>
  * <a href="http://en.wikipedia.org/wiki/Client%E2%80%93server_model">Client/Server</a>

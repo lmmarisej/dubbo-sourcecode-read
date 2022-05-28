@@ -21,12 +21,16 @@ import org.apache.dubbo.common.extension.SPI;
 
 
 /**
+ * 注册在 Channel 上的消息处理器。
+ *
+ * 在 ChannelHandler 中可以处理 Channel 的连接建立以及连接断开事件，还可以处理读取到的数据、发送的数据以及捕获到的异常。
+ *
  * ChannelHandler. (API, Prototype, ThreadSafe)
  *
  * @see org.apache.dubbo.remoting.Transporter#bind(org.apache.dubbo.common.URL, ChannelHandler)
  * @see org.apache.dubbo.remoting.Transporter#connect(org.apache.dubbo.common.URL, ChannelHandler)
  */
-@SPI(scope = ExtensionScope.FRAMEWORK)
+@SPI(scope = ExtensionScope.FRAMEWORK)      // ChannelHandler 接口被 @SPI 注解修饰，表示该接口是一个扩展点。
 public interface ChannelHandler {
 
     /**

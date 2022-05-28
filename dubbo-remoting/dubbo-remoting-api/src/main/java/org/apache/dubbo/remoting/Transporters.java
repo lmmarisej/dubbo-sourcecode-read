@@ -22,6 +22,8 @@ import org.apache.dubbo.remoting.transport.ChannelHandlerAdapter;
 import org.apache.dubbo.remoting.transport.ChannelHandlerDispatcher;
 
 /**
+ * 门面类，其中封装了 Transporter 对象的创建（通过 Dubbo SPI）以及 ChannelHandler 的处理。
+ *
  * Transporter facade. (API, Static, ThreadSafe)
  */
 public class Transporters {
@@ -35,6 +37,9 @@ public class Transporters {
     private Transporters() {
     }
 
+    /**
+     * 会将多个 ChannelHandler 封装成一个 ChannelHandlerDispatcher 对象。
+     */
     public static RemotingServer bind(String url, ChannelHandler... handler) throws RemotingException {
         return bind(URL.valueOf(url), handler);
     }
@@ -75,6 +80,7 @@ public class Transporters {
     }
 
     public static Transporter getTransporter(URL url) {
+        // 自动生成 Transporter 适配器并加载
         return url.getOrDefaultFrameworkModel().getExtensionLoader(Transporter.class).getAdaptiveExtension();
     }
 

@@ -21,6 +21,8 @@ import org.apache.dubbo.common.URL;
 import java.net.InetSocketAddress;
 
 /**
+ * 可以通过一个 ip 和 port 唯一确定一个端点，两个端点之间会创建 TCP 连接，可以双向传输数据。
+ *
  * Endpoint. (API/SPI, Prototype, ThreadSafe)
  *
  *
@@ -29,6 +31,8 @@ import java.net.InetSocketAddress;
  * @see RemotingServer
  */
 public interface Endpoint {
+
+    // 获取 Endpoint 的本地地址、关联的 URL 信息以及底层 Channel 关联的 ChannelHandler。
 
     /**
      * get url.
@@ -52,7 +56,7 @@ public interface Endpoint {
     InetSocketAddress getLocalAddress();
 
     /**
-     * send message.
+     * 数据发送。
      *
      * @param message
      * @throws RemotingException
@@ -73,14 +77,14 @@ public interface Endpoint {
     void close();
 
     /**
-     * Graceful close the channel.
+     * 用于关闭底层 Channel
      */
     void close(int timeout);
 
     void startClose();
 
     /**
-     * is closed.
+     * 检测底层 Channel 是否已关闭。
      *
      * @return closed
      */

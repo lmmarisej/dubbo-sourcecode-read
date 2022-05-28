@@ -22,6 +22,16 @@ import org.apache.dubbo.common.extension.ExtensionScope;
 import org.apache.dubbo.common.extension.SPI;
 
 /**
+ * 针对每个支持的 NIO 库，都有一个 Transporter 接口实现，散落在各个 dubbo-remoting-* 实现模块中。
+ *
+ * 返回 NIO 库对应的 RemotingServer 实现和 Client 实现。
+ *
+ * 有了 Transporter 层之后，我们可以通过 Dubbo SPI 修改使用的具体 Transporter 扩展实现，
+ * 从而切换到不同的 Client 和 RemotingServer 实现，达到底层 NIO 库切换的目的，而且无须修改任何代码。
+ *
+ * 即使有更先进的 NIO 库出现，我们也只需要开发相应的 dubbo-remoting-* 实现模块提供 Transporter、Client、RemotingServer
+ * 等核心接口的实现，即可接入，完全符合开放-封闭原则。
+ *
  * Transporter. (SPI, Singleton, ThreadSafe)
  * <p>
  * <a href="http://en.wikipedia.org/wiki/Transport_Layer">Transport Layer</a>
@@ -41,6 +51,8 @@ public interface Transporter {
      * @throws RemotingException
      * @see org.apache.dubbo.remoting.Transporters#bind(URL, ChannelHandler...)
      */
+    // 先后根据“server”“transporter”的值确定 RemotingServer 的扩展实现类，
+    // 先后根据“client”“transporter”的值确定 Client 接口的扩展实现。
     @Adaptive({Constants.SERVER_KEY, Constants.TRANSPORTER_KEY})
     RemotingServer bind(URL url, ChannelHandler handler) throws RemotingException;
 

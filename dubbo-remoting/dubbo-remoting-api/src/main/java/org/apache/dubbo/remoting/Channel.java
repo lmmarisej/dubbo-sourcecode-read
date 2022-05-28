@@ -19,6 +19,10 @@ package org.apache.dubbo.remoting;
 import java.net.InetSocketAddress;
 
 /**
+ * Dubbo 将 Endpoint 之间的 TCP 连接抽象为通道（Channel）。
+ *
+ * 一个是 Channel 接口继承了 Endpoint 接口，也具备开关状态以及发送数据的能力；
+ *
  * Channel. (API/SPI, Prototype, ThreadSafe)
  *
  * @see org.apache.dubbo.remoting.Client
@@ -40,6 +44,8 @@ public interface Channel extends Endpoint {
      * @return connected
      */
     boolean isConnected();
+
+    // 可以在 Channel 上附加 K/V 属性。
 
     /**
      * has attribute.

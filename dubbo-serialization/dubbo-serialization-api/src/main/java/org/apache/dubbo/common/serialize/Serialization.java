@@ -27,18 +27,18 @@ import java.io.OutputStream;
 
 /**
  * Serialization strategy interface that specifies a serializer. (SPI, Singleton, ThreadSafe)
- *
+ * <p>
  * The default extension is hessian2 and the default serialization implementation of the dubbo protocol.
  * <pre>
  *     e.g. &lt;dubbo:protocol serialization="xxx" /&gt;
  * </pre>
  */
-@SPI(value = "hessian2", scope = ExtensionScope.FRAMEWORK)
+@SPI(value = "hessian2", scope = ExtensionScope.FRAMEWORK)  // 被@SPI注解修饰，默认是使用hessian2序列化算法
 public interface Serialization {
 
     /**
      * Get content type unique id, recommended that custom implementations use values different with
-     * any value of {@link Constants} and don't greater than ExchangeCodec.SERIALIZATION_MASK (31) 
+     * any value of {@link Constants} and don't greater than ExchangeCodec.SERIALIZATION_MASK (31)
      * because dubbo protocol use 5 bits to record serialization ID in header.
      *
      * @return content type id
@@ -50,12 +50,12 @@ public interface Serialization {
      *
      * @return content type
      */
-    String getContentType();
+    String getContentType();            // 每一种序列化算法都对应一个ContentType，该方法用于获取ContentType
 
     /**
-     * Get a serialization implementation instance
+     * 创建一个 ObjectOutput 对象，ObjectOutput 负责实现序列化的功能，即将 Java 对象转化为字节序列。
      *
-     * @param url URL address for the remote service
+     * @param url    URL address for the remote service
      * @param output the underlying output stream
      * @return serializer
      * @throws IOException
@@ -66,7 +66,7 @@ public interface Serialization {
     /**
      * Get a deserialization implementation instance
      *
-     * @param url URL address for the remote service
+     * @param url   URL address for the remote service
      * @param input the underlying input stream
      * @return deserializer
      * @throws IOException
