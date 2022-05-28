@@ -16,6 +16,13 @@
  */
 package org.apache.dubbo.remoting.transport.netty4;
 
+import io.netty.bootstrap.Bootstrap;
+import io.netty.buffer.PooledByteBufAllocator;
+import io.netty.channel.*;
+import io.netty.channel.socket.SocketChannel;
+import io.netty.handler.proxy.Socks5ProxyHandler;
+import io.netty.handler.timeout.IdleStateHandler;
+import io.netty.util.concurrent.EventExecutorGroup;
 import org.apache.dubbo.common.URL;
 import org.apache.dubbo.common.Version;
 import org.apache.dubbo.common.config.ConfigurationUtils;
@@ -30,17 +37,6 @@ import org.apache.dubbo.remoting.RemotingException;
 import org.apache.dubbo.remoting.api.SslClientTlsHandler;
 import org.apache.dubbo.remoting.transport.AbstractClient;
 import org.apache.dubbo.remoting.utils.UrlUtils;
-
-import io.netty.bootstrap.Bootstrap;
-import io.netty.buffer.PooledByteBufAllocator;
-import io.netty.channel.Channel;
-import io.netty.channel.ChannelFuture;
-import io.netty.channel.ChannelInitializer;
-import io.netty.channel.ChannelOption;
-import io.netty.channel.EventLoopGroup;
-import io.netty.channel.socket.SocketChannel;
-import io.netty.handler.proxy.Socks5ProxyHandler;
-import io.netty.handler.timeout.IdleStateHandler;
 
 import java.net.InetSocketAddress;
 
@@ -66,9 +62,11 @@ public class NettyClient extends AbstractClient {
     /**
      * netty client bootstrap
      */
-    private static final GlobalResourceInitializer<EventLoopGroup> EVENT_LOOP_GROUP = new GlobalResourceInitializer<>(() ->
-        eventLoopGroup(Constants.DEFAULT_IO_THREADS, "NettyClientWorker"),
-        eventLoopGroup -> eventLoopGroup.shutdownGracefully());
+    private static final GlobalResourceInitializer<EventLoopGroup> EVENT_LOOP_GROUP =
+        new GlobalResourceInitializer<>(
+            () -> eventLoopGroup(Constants.DEFAULT_IO_THREADS, "NettyClientWorker"),
+            EventExecutorGroup::shutdownGracefully
+        );
 
     private Bootstrap bootstrap;
 
@@ -107,11 +105,11 @@ public class NettyClient extends AbstractClient {
 
     protected void initBootstrap(NettyClientHandler nettyClientHandler) {
         bootstrap.group(EVENT_LOOP_GROUP.get())
-                .option(ChannelOption.SO_KEEPALIVE, true)
-                .option(ChannelOption.TCP_NODELAY, true)
-                .option(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT)
-                //.option(ChannelOption.CONNECT_TIMEOUT_MILLIS, getTimeout())
-                .channel(socketChannelClass());
+            .option(ChannelOption.SO_KEEPALIVE, true)
+            .option(ChannelOption.TCP_NODELAY, true)
+            .option(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT)
+            //.option(ChannelOption.CONNECT_TIMEOUT_MILLIS, getTimeout())
+            .channel(socketChannelClass());
 
         bootstrap.option(ChannelOption.CONNECT_TIMEOUT_MILLIS, Math.max(DEFAULT_CONNECT_TIMEOUT, getConnectTimeout()));
         bootstrap.handler(new ChannelInitializer<SocketChannel>() {
@@ -126,13 +124,13 @@ public class NettyClient extends AbstractClient {
 
                 NettyCodecAdapter adapter = new NettyCodecAdapter(getCodec(), getUrl(), NettyClient.this);
                 ch.pipeline()//.addLast("logging",new LoggingHandler(LogLevel.INFO))//for debug
-                        .addLast("decoder", adapter.getDecoder())
-                        .addLast("encoder", adapter.getEncoder())
-                        .addLast("client-idle-handler", new IdleStateHandler(heartbeatInterval, 0, 0, MILLISECONDS))
-                        .addLast("handler", nettyClientHandler);
+                    .addLast("decoder", adapter.getDecoder())
+                    .addLast("encoder", adapter.getEncoder())
+                    .addLast("client-idle-handler", new IdleStateHandler(heartbeatInterval, 0, 0, MILLISECONDS))
+                    .addLast("handler", nettyClientHandler);
 
                 String socksProxyHost = ConfigurationUtils.getProperty(getUrl().getOrDefaultApplicationModel(), SOCKS_PROXY_HOST);
-                if(socksProxyHost != null && !isFilteredAddress(getUrl().getHost())) {
+                if (socksProxyHost != null && !isFilteredAddress(getUrl().getHost())) {
                     int socksProxyPort = Integer.parseInt(ConfigurationUtils.getProperty(getUrl().getOrDefaultApplicationModel(), SOCKS_PROXY_PORT, DEFAULT_SOCKS_PROXY_PORT));
                     Socks5ProxyHandler socks5ProxyHandler = new Socks5ProxyHandler(new InetSocketAddress(socksProxyHost, socksProxyPort));
                     ch.pipeline().addFirst(socks5ProxyHandler);
@@ -189,12 +187,12 @@ public class NettyClient extends AbstractClient {
                 }
             } else if (future.cause() != null) {
                 throw new RemotingException(this, "client(url: " + getUrl() + ") failed to connect to server "
-                        + getRemoteAddress() + ", error message is:" + future.cause().getMessage(), future.cause());
+                    + getRemoteAddress() + ", error message is:" + future.cause().getMessage(), future.cause());
             } else {
                 throw new RemotingException(this, "client(url: " + getUrl() + ") failed to connect to server "
-                        + getRemoteAddress() + " client-side timeout "
-                        + getConnectTimeout() + "ms (elapsed: " + (System.currentTimeMillis() - start) + "ms) from netty client "
-                        + NetUtils.getLocalHost() + " using dubbo version " + Version.getVersion());
+                    + getRemoteAddress() + " client-side timeout "
+                    + getConnectTimeout() + "ms (elapsed: " + (System.currentTimeMillis() - start) + "ms) from netty client "
+                    + NetUtils.getLocalHost() + " using dubbo version " + Version.getVersion());
             }
         } finally {
             // just add new valid channel to NettyChannel's cache

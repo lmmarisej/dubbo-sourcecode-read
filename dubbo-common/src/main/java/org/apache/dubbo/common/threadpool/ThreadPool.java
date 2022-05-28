@@ -29,7 +29,7 @@ import static org.apache.dubbo.common.constants.CommonConstants.THREADPOOL_KEY;
  * ThreadPool
  */
 //TODO which scope for ThreadPool? APPLICATION or FRAMEWORK
-@SPI(value = "fixed", scope = ExtensionScope.FRAMEWORK)
+@SPI(value = "fixed", scope = ExtensionScope.FRAMEWORK)     // 通过 Dubbo SPI 查找 ThreadPool 接口的扩展实现
 public interface ThreadPool {
 
     /**
@@ -38,7 +38,7 @@ public interface ThreadPool {
      * @param url URL contains thread parameter
      * @return thread pool
      */
-    @Adaptive({THREADPOOL_KEY})
+    @Adaptive({THREADPOOL_KEY})     // 动态生成的适配器类会优先根据 URL 中的 threadpool 参数选择 ThreadPool 的扩展实现。
     Executor getExecutor(URL url);
 
 }

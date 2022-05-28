@@ -30,12 +30,12 @@ public abstract class AbstractPeer implements Endpoint, ChannelHandler {
 
     private final ChannelHandler handler;
 
-    private volatile URL url;
+    private volatile URL url;       // 表示该端点自身的 URL 类型的字段
 
     // closing closed means the process is being closed and close is finished
     private volatile boolean closing;
 
-    private volatile boolean closed;
+    private volatile boolean closed;        // 记录当前端点的状态
 
     public AbstractPeer(URL url, ChannelHandler handler) {
         if (url == null) {
@@ -131,6 +131,7 @@ public abstract class AbstractPeer implements Endpoint, ChannelHandler {
         handler.disconnected(ch);
     }
 
+    // 调用 sent()方法，向对端写回响应结果
     @Override
     public void sent(Channel ch, Object msg) throws RemotingException {
         if (closed) {

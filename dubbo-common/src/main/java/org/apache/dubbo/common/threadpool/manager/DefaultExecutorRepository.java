@@ -57,6 +57,7 @@ public class DefaultExecutorRepository implements ExecutorRepository, ExtensionA
 
     private volatile ExecutorService serviceReferExecutor;
 
+    // 一层 Key 值表示线程池属于 Provider 端还是 Consumer 端，第二层 Key 值表示线程池关联服务的端口。
     private final ConcurrentMap<String, ConcurrentMap<Integer, ExecutorService>> data = new ConcurrentHashMap<>();
 
     private final Object LOCK = new Object();
@@ -71,10 +72,7 @@ public class DefaultExecutorRepository implements ExecutorRepository, ExtensionA
     }
 
     /**
-     * Get called when the server or client instance initiating.
-     *
-     * @param url
-     * @return
+     * 根据 URL 参数创建相应的线程池并缓存在合适的位置
      */
     @Override
     public synchronized ExecutorService createExecutorIfAbsent(URL url) {
@@ -89,12 +87,15 @@ public class DefaultExecutorRepository implements ExecutorRepository, ExtensionA
         // If executor has been shut down, create a new one
         if (executor.isShutdown() || executor.isTerminated()) {
             executors.remove(portKey);
-            executor = createExecutor(url);
-            executors.put(portKey, executor);
+            executor = createExecutor(url);         // 如果缓存中相应的线程池已关闭，则同样需要调用createExecutor()方法
+            executors.put(portKey, executor);       // 创建新的线程池，并替换掉缓存中已关闭的线程持
         }
         return executor;
     }
 
+    /**
+     * 通过 Dubbo SPI 查找 ThreadPool 接口的扩展实现，并调用其 getExecutor() 方法创建线程池。
+     */
     private ExecutorService createExecutor(URL url) {
         return (ExecutorService) extensionAccessor.getExtensionLoader(ThreadPool.class).getAdaptiveExtension().getExecutor(url);
     }

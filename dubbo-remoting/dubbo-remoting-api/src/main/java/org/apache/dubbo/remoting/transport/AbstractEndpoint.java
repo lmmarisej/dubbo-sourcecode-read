@@ -43,25 +43,30 @@ public abstract class AbstractEndpoint extends AbstractPeer implements Resetable
 
     public AbstractEndpoint(URL url, ChannelHandler handler) {
         super(url, handler);
-        this.codec = getChannelCodec(url);
+        this.codec = getChannelCodec(url);      // 根据URL中的codec参数值，确定此处具体的Codec2实现类
+        // 根据URL中的timeout参数确定timeout字段的值，默认1000
         this.connectTimeout = url.getPositiveParameter(Constants.CONNECT_TIMEOUT_KEY, Constants.DEFAULT_CONNECT_TIMEOUT);
     }
 
     protected static Codec2 getChannelCodec(URL url) {
-        String codecName = url.getParameter(Constants.CODEC_KEY);
+        String codecName = url.getParameter(Constants.CODEC_KEY);       // 基于 Dubbo SPI 选择其扩展实现
         if (StringUtils.isEmpty(codecName)) {
             // codec extension name must stay the same with protocol name
             codecName = url.getProtocol();
         }
         FrameworkModel frameworkModel = getFrameworkModel(url.getScopeModel());
+        // 通过 ExtensionLoader 加载并实例化 Codec2 的具体扩展实现
         if (frameworkModel.getExtensionLoader(Codec2.class).hasExtension(codecName)) {
             return frameworkModel.getExtensionLoader(Codec2.class).getExtension(codecName);
         } else {
-            return new CodecAdapter(frameworkModel.getExtensionLoader(Codec.class)
+            return new CodecAdapter(frameworkModel.getExtensionLoader(Codec.class)      // 尝试从Codec这个老接口的扩展名中查找
                 .getExtension(codecName));
         }
     }
 
+    /**
+     * 根据传入的 URL 参数重置 AbstractEndpoint 的三个字段
+     */
     @Override
     public void reset(URL url) {
         if (isClosed()) {

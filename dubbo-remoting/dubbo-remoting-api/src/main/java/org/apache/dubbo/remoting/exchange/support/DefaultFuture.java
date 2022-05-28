@@ -55,7 +55,7 @@ public class DefaultFuture extends CompletableFuture<Object> {
 
     private static GlobalResourceInitializer<Timer> TIME_OUT_TIMER = new GlobalResourceInitializer<>(() -> new HashedWheelTimer(
         new NamedThreadFactory("dubbo-future-timeout", true), 30, TimeUnit.MILLISECONDS),
-        () -> destroy());
+        DefaultFuture::destroy);
 
     // invoke id.
     private final Long id;

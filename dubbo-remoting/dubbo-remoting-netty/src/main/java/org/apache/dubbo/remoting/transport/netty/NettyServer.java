@@ -98,7 +98,7 @@ public class NettyServer extends AbstractServer implements RemotingServer {
             }
         });
         // bind
-        channel = bootstrap.bind(getBindAddress());
+        channel = bootstrap.bind(getBindAddress());    // 绑定指定的地址和端口
     }
 
     @Override

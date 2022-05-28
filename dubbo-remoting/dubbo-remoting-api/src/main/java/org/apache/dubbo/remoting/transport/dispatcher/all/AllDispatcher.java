@@ -21,7 +21,7 @@ import org.apache.dubbo.remoting.ChannelHandler;
 import org.apache.dubbo.remoting.Dispatcher;
 
 /**
- * default thread pool configure
+ * 会将所有网络事件以及消息交给关联的线程池进行处理。
  */
 public class AllDispatcher implements Dispatcher {
 

@@ -23,6 +23,8 @@ import org.apache.dubbo.common.extension.SPI;
 /**
  * 注册在 Channel 上的消息处理器。
  *
+ * AbstractChannel、AbstractServer、AbstractClient 都是要关联一个 ChannelHandler 对象的。
+ *
  * 在 ChannelHandler 中可以处理 Channel 的连接建立以及连接断开事件，还可以处理读取到的数据、发送的数据以及捕获到的异常。
  *
  * ChannelHandler. (API, Prototype, ThreadSafe)

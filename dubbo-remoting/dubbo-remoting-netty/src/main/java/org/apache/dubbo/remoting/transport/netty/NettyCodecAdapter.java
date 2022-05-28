@@ -116,7 +116,7 @@ final class NettyCodecAdapter {
                 } else {
                     int size = buffer.readableBytes() + input.readableBytes();
                     message = org.apache.dubbo.remoting.buffer.ChannelBuffers.dynamicBuffer(
-                            size > bufferSize ? size : bufferSize);
+                        Math.max(size, bufferSize));
                     message.writeBytes(buffer, buffer.readableBytes());
                     message.writeBytes(input.toByteBuffer());
                 }
@@ -132,9 +132,9 @@ final class NettyCodecAdapter {
             try {
                 // decode object.
                 do {
-                    saveReaderIndex = message.readerIndex();
+                    saveReaderIndex = message.readerIndex();  // 记录当前readerIndex的位置
                     try {
-                        msg = codec.decode(channel, message);
+                        msg = codec.decode(channel, message);  // 委托给Codec2进行解码
                     } catch (IOException e) {
                         buffer = org.apache.dubbo.remoting.buffer.ChannelBuffers.EMPTY_BUFFER;
                         throw e;
@@ -144,17 +144,18 @@ final class NettyCodecAdapter {
                         break;
                     } else {
                         if (saveReaderIndex == message.readerIndex()) {
+                            // 当前接收到的数据不足一个消息的长度，会返回 NEED_MORE_INPUT
                             buffer = org.apache.dubbo.remoting.buffer.ChannelBuffers.EMPTY_BUFFER;
                             throw new IOException("Decode without read data.");
                         }
                         if (msg != null) {
-                            Channels.fireMessageReceived(ctx, msg, event.getRemoteAddress());
+                            Channels.fireMessageReceived(ctx, msg, event.getRemoteAddress());   // 调用下一个 handler 来处理
                         }
                     }
                 } while (message.readable());
             } finally {
                 if (message.readable()) {
-                    message.discardReadBytes();
+                    message.discardReadBytes();     // 这里会重置readerIndex，继续等待接收更多的数据
                     buffer = message;
                 } else {
                     buffer = org.apache.dubbo.remoting.buffer.ChannelBuffers.EMPTY_BUFFER;

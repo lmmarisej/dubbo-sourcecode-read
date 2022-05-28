@@ -32,6 +32,11 @@ import org.apache.dubbo.rpc.model.ApplicationModel;
 
 import java.util.concurrent.ExecutorService;
 
+/**
+ * 子类主要是决定了 Dubbo 以何种线程模型处理收到的事件和消息 —— 消息派发机制。
+ *
+ * 个 WrappedChannelHandler 实现类的对象都由一个相应的 Dispatcher 实现类创建
+ */
 public class WrappedChannelHandler implements ChannelHandlerDelegate {
 
     protected static final Logger logger = LoggerFactory.getLogger(WrappedChannelHandler.class);
@@ -100,21 +105,20 @@ public class WrappedChannelHandler implements ChannelHandlerDelegate {
     }
 
     /**
+     * 如果请求在发送的时候指定了关联的线程池，在收到对应的响应消息的时候，会优先根据请求的 ID 查找请求关联的线程池处理响应。
+     *
      * Currently, this method is mainly customized to facilitate the thread model on consumer side.
      * 1. Use ThreadlessExecutor, aka., delegate callback directly to the thread initiating the call.
      * 2. Use shared executor to execute the callback.
-     *
-     * @param msg
-     * @return
      */
     public ExecutorService getPreferredExecutorService(Object msg) {
         if (msg instanceof Response) {
             Response response = (Response) msg;
-            DefaultFuture responseFuture = DefaultFuture.getFuture(response.getId());
+            DefaultFuture responseFuture = DefaultFuture.getFuture(response.getId());        // 获取请求关联的DefaultFuture
             // a typical scenario is the response returned after timeout, the timeout response may have completed the future
             if (responseFuture == null) {
                 return getSharedExecutorService();
-            } else {
+            } else {        // 如果请求关联了线程池，则会获取相关的线程来处理响应
                 ExecutorService executor = responseFuture.getExecutor();
                 if (executor == null || executor.isShutdown()) {
                     executor = getSharedExecutorService();
@@ -122,14 +126,12 @@ public class WrappedChannelHandler implements ChannelHandlerDelegate {
                 return executor;
             }
         } else {
-            return getSharedExecutorService();
+            return getSharedExecutorService();       // 如果是请求消息，则直接使用公共的线程池处理
         }
     }
 
     /**
      * get the shared executor for current Server or Client
-     *
-     * @return
      */
     public ExecutorService getSharedExecutorService() {
         // Application may be destroyed before channel disconnected, avoid create new application model

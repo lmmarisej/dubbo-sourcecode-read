@@ -28,8 +28,11 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
 /**
- * The most important difference between this Executor and other normal Executor is that this one doesn't manage
- * any thread.
+ * 特殊类型的线程池，ThreadlessExecutor 内部不管理任何线程。
+ *
+ * 因为在 Dubbo 2.7.5 版本之前，在 WrappedChannelHandler 中会为每个连接启动一个线程池。
+ *
+ * The most important difference between this Executor and other normal Executor is that this one doesn't manage any thread.
  * <p>
  * Tasks submitted to this executor through {@link #execute(Runnable)} will not get scheduled to a specific thread, though normal executors always do the schedule.
  * Those tasks are stored in a blocking queue and will only be executed when a thread calls {@link #waitAndDrain()}, the thread executing the task
@@ -38,12 +41,13 @@ import java.util.concurrent.TimeUnit;
 public class ThreadlessExecutor extends AbstractExecutorService {
     private static final Logger logger = LoggerFactory.getLogger(ThreadlessExecutor.class.getName());
 
-    private final BlockingQueue<Runnable> queue = new LinkedBlockingQueue<>();
+    private final BlockingQueue<Runnable> queue = new LinkedBlockingQueue<>();      // 阻塞队列，用来在 IO 线程和业务线程之间传递任务。
 
-    private CompletableFuture<?> waitingFuture;
+    private CompletableFuture<?> waitingFuture;     // 指向请求对应的 DefaultFuture 对象
 
     private boolean finished = false;
 
+    // 当后续再次调用 execute() 方法提交任务时，会根据 waiting 字段决定任务是放入 queue 队列等待业务线程执行，还是直接由 sharedExecutor 线程池执行。
     private volatile boolean waiting = true;
 
     private final Object lock = new Object();
@@ -73,6 +77,8 @@ public class ThreadlessExecutor extends AbstractExecutorService {
     }
 
     /**
+     * 执行任务的与调用 waitAndDrain() 方法的是同一个线程。
+     *
      * Waits until there is a task, executes the task and all queued tasks (if there're any). The task is either a normal
      * response or a timeout response.
      */
@@ -86,7 +92,7 @@ public class ThreadlessExecutor extends AbstractExecutorService {
          * 'finished' only appear in waitAndDrain, since waitAndDrain is binding to one RPC call (one thread), the call
          * of it is totally sequential.
          */
-        if (isFinished()) {
+        if (isFinished()) {     // 检测 finished 字段值，然后获取阻塞队列中的全部任务并执行
             return;
         }
 
@@ -109,10 +115,14 @@ public class ThreadlessExecutor extends AbstractExecutorService {
             runnable = queue.poll();
         }
         // mark the status of ThreadlessExecutor as finished.
+        // 执行完成之后会修改finished和 waiting 字段，标识当前 ThreadlessExecutor 已使用完毕，无业务线程等待
         setFinished(true);
     }
 
     /**
+     * 将任务提交给这个线程池，但是这些提交的任务不会被调度到任何线程执行，而是存储在阻塞队列中，
+     * 只有当其他线程调用 ThreadlessExecutor.waitAndDrain() 方法时才会真正执行。
+     *
      * If the calling thread is still waiting for a callback task, add the task into the blocking queue to wait for schedule.
      * Otherwise, submit to shared callback executor directly.
      *
@@ -122,11 +132,11 @@ public class ThreadlessExecutor extends AbstractExecutorService {
     public void execute(Runnable runnable) {
         runnable = new RunnableWrapper(runnable);
         synchronized (lock) {
-            if (!isWaiting()) {
-                runnable.run();
+            if (!isWaiting()) {  // 判断业务线程是否还在等待响应结果
+                runnable.run();  // 不等待，则直接处理任务
                 return;
             }
-            queue.add(runnable);
+            queue.add(runnable);        // 业务线程还在等待，则将任务写入队列，然后由业务线程自己执行
         }
     }
 
