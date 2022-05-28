@@ -382,9 +382,14 @@ public class UrlUtils {
         }
     }
 
+    /**
+     * 完成 Consumer URL 与 Provider URL 的匹配。
+     */
     public static boolean isMatch(URL consumerUrl, URL providerUrl) {
         String consumerInterface = consumerUrl.getServiceInterface();
         String providerInterface = providerUrl.getServiceInterface();
+        // 优先取 interface 参数，其次再取 path
+        // 双方接口相同或者其中一方为“*”，则匹配成功
         //FIXME accept providerUrl with '*' as interface name, after carefully thought about all possible scenarios I think it's ok to add this condition.
         if (!(ANY_VALUE.equals(consumerInterface)
             || ANY_VALUE.equals(providerInterface)
@@ -392,15 +397,19 @@ public class UrlUtils {
             return false;
         }
 
+        // 匹配 Consumer 和 Provider 的 category。
         if (!isMatchCategory(providerUrl.getCategory(DEFAULT_CATEGORY),
             consumerUrl.getCategory(DEFAULT_CATEGORY))) {
             return false;
         }
+
+        // 检测 Consumer URL 和 Provider URL 中的 enable 参数是否符合条件。
         if (!providerUrl.getParameter(ENABLED_KEY, true)
             && !ANY_VALUE.equals(consumerUrl.getParameter(ENABLED_KEY))) {
             return false;
         }
 
+        // 检测 Consumer 和 Provider 端的 group、version 以及 classifier 是否符合条件。
         String consumerGroup = consumerUrl.getGroup();
         String consumerVersion = consumerUrl.getVersion();
         String consumerClassifier = consumerUrl.getParameter(CLASSIFIER_KEY, ANY_VALUE);

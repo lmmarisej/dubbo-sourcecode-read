@@ -1354,7 +1354,7 @@ class URL implements Serializable {
     /**
      * The format of return value is '{group}/{interfaceName}:{version}'
      *
-     * @return
+     * @return 返回的 ServiceKey 是 properties 集合以及相应缓存文件中的 Key。
      */
     public String getServiceKey() {
         if (serviceKey != null) {

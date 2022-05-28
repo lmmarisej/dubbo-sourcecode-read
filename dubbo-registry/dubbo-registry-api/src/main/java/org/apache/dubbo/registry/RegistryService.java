@@ -26,7 +26,9 @@ import java.util.List;
  * @see org.apache.dubbo.registry.Registry
  * @see org.apache.dubbo.registry.RegistryFactory#getRegistry(URL)
  */
-public interface RegistryService {
+public interface RegistryService {      // 抽象了注册服务的基本行为
+
+    // 注册和取消注册一个 URL
 
     /**
      * Register data, such as : provider service, consumer address, route rule, override rule and other data.
@@ -38,7 +40,7 @@ public interface RegistryService {
      * 4. When the registry is restarted, network jitter, data can not be lost, including automatically deleting data from the broken line.<br>
      * 5. Allow URLs which have the same URL but different parameters to coexist,they can't cover each other.<br>
      *
-     * @param url  Registration information , is not allowed to be empty, e.g: dubbo://10.20.153.10/org.apache.dubbo.foo.BarService?version=1.0.0&application=kylin
+     * @param url Registration information , is not allowed to be empty, e.g: dubbo://10.20.153.10/org.apache.dubbo.foo.BarService?version=1.0.0&application=kylin
      */
     void register(URL url);
 
@@ -89,6 +91,6 @@ public interface RegistryService {
      * @return The registered information list, which may be empty, the meaning is the same as the parameters of {@link org.apache.dubbo.registry.NotifyListener#notify(List<URL>)}.
      * @see org.apache.dubbo.registry.NotifyListener#notify(List)
      */
-    List<URL> lookup(URL url);
+    List<URL> lookup(URL url);      // 查询符合条件的注册数据
 
 }

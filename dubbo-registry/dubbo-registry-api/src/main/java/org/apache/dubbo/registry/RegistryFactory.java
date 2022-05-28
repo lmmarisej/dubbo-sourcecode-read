@@ -24,7 +24,9 @@ import static org.apache.dubbo.common.constants.CommonConstants.PROTOCOL_KEY;
 import static org.apache.dubbo.common.extension.ExtensionScope.APPLICATION;
 
 /**
- * 工厂方法模式。RegistryFactory 作为扩展点，用于根据 URL 信息动态生成 Registry。
+ * 工厂方法模式。Registry 的工厂接口，用于根据 URL 信息动态生成 Registry。
+ *
+ * 每个 Registry 实现类都有对应的 RegistryFactory 工厂实现，每个 RegistryFactory 工厂实现只负责创建对应的 Registry 对象。
  *
  * RegistryFactory. (SPI, Singleton, ThreadSafe)
  *

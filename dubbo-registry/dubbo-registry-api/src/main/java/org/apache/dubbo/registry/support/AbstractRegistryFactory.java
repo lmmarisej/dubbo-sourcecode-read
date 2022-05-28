@@ -33,6 +33,8 @@ import static org.apache.dubbo.rpc.cluster.Constants.EXPORT_KEY;
 import static org.apache.dubbo.rpc.cluster.Constants.REFER_KEY;
 
 /**
+ * 提供了规范 URL 的操作以及缓存 Registry 对象的公共能力。
+ *
  * AbstractRegistryFactory. (SPI, Singleton, ThreadSafe)
  *
  * @see org.apache.dubbo.registry.RegistryFactory
@@ -41,7 +43,7 @@ public abstract class AbstractRegistryFactory implements RegistryFactory, ScopeM
 
     private static final Logger LOGGER = LoggerFactory.getLogger(AbstractRegistryFactory.class);
 
-    private RegistryManager registryManager;
+    private RegistryManager registryManager;        // 缓存 Registry
     protected ApplicationModel applicationModel;
 
     @Override
@@ -63,8 +65,10 @@ public abstract class AbstractRegistryFactory implements RegistryFactory, ScopeM
         }
 
         url = URLBuilder.from(url)
+            // 将 RegistryService 的类名设置为 URL path 和 interface 参数
             .setPath(RegistryService.class.getName())
             .addParameter(INTERFACE_KEY, RegistryService.class.getName())
+            // 删除 timestamp、export 和 refer 参数
             .removeParameter(TIMESTAMP_KEY)
             .removeAttribute(EXPORT_KEY)
             .removeAttribute(REFER_KEY)

@@ -23,7 +23,7 @@ import static org.apache.dubbo.common.constants.CommonConstants.DEFAULT_DELAY_NO
 import static org.apache.dubbo.common.constants.CommonConstants.REGISTRY_DELAY_NOTIFICATION_KEY;
 
 /**
- * 对注册中心的抽象。
+ * 一个拥有注册中心能力的节点。
  *
  * Registry. (SPI, Prototype, ThreadSafe)
  *
@@ -38,6 +38,8 @@ public interface Registry extends Node, RegistryService {
     default boolean isServiceDiscovery() {
         return false;
     }
+
+    // 委托给 RegistryService 中的相应方法。
 
     default void reExportRegister(URL url) {
         register(url);

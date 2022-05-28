@@ -17,6 +17,8 @@
 package org.apache.dubbo.common;
 
 /**
+ * 抽象节点的概念。Node不仅可以表示 Provider 和 Consumer 节点，还可以表示注册中心节点。
+ *
  * Node. (API/SPI, Prototype, ThreadSafe)
  */
 public interface Node {
@@ -26,18 +28,18 @@ public interface Node {
      *
      * @return url.
      */
-    URL getUrl();
+    URL getUrl();       // 当前节点的 URL。
 
     /**
      * is available.
      *
      * @return available.
      */
-    boolean isAvailable();
+    boolean isAvailable();      // 当前节点是否可用。
 
     /**
      * destroy.
      */
-    void destroy();
+    void destroy();     // 销毁当前节点并释放底层资源。
 
 }

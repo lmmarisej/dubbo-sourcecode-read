@@ -21,6 +21,9 @@ import org.apache.dubbo.common.URL;
 
 import java.util.Collections;
 
+/**
+ * 是 RegistryFactory 接口的 Wrapper 类
+ */
 public class RegistryFactoryWrapper implements RegistryFactory {
     private RegistryFactory registryFactory;
 
@@ -28,10 +31,15 @@ public class RegistryFactoryWrapper implements RegistryFactory {
         this.registryFactory = registryFactory;
     }
 
+    // 在底层 RegistryFactory 创建的 Registry 对象外层封装了一个 ListenerRegistryWrapper
     @Override
     public Registry getRegistry(URL url) {
-        return new ListenerRegistryWrapper(registryFactory.getRegistry(url),
-                Collections.unmodifiableList(url.getOrDefaultApplicationModel().getExtensionLoader(RegistryServiceListener.class)
-                        .getActivateExtension(url, "registry.listeners")));
+        return new ListenerRegistryWrapper(
+            registryFactory.getRegistry(url),
+            Collections.unmodifiableList(url.getOrDefaultApplicationModel()
+                // 维护了一个 RegistryServiceListener 集合， 会将 register()、subscribe() 等事件通知到 RegistryServiceListener 监听器。
+                .getExtensionLoader(RegistryServiceListener.class)      // SPI 加载监听器
+                .getActivateExtension(url, "registry.listeners"))
+        );
     }
 }
