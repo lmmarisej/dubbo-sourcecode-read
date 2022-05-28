@@ -22,11 +22,15 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.ByteBuffer;
 
+/**
+ * 可以认为是其他 ChannelBuffer 的装饰器，它可以为其他 ChannelBuffer 添加动态扩展容量的功能。
+ */
 public class DynamicChannelBuffer extends AbstractChannelBuffer {
 
+    // 用于创建被修饰的 HeapChannelBuffer 对象的 ChannelBufferFactory 工厂，默认为 HeapChannelBufferFactory。
     private final ChannelBufferFactory factory;
 
-    private ChannelBuffer buffer;
+    private ChannelBuffer buffer;       // 被修饰的 ChannelBuffer，默认为 HeapChannelBuffer。
 
     public DynamicChannelBuffer(int estimatedLength) {
         this(estimatedLength, HeapChannelBufferFactory.getInstance());
@@ -43,6 +47,9 @@ public class DynamicChannelBuffer extends AbstractChannelBuffer {
         buffer = factory.getBuffer(estimatedLength);
     }
 
+    /**
+     * 实现了动态扩容的功能，在每次写入数据之前，都需要调用该方法确定当前可用空间是否足够
+     */
     @Override
     public void ensureWritableBytes(int minWritableBytes) {
         if (minWritableBytes <= writableBytes()) {
@@ -60,9 +67,9 @@ public class DynamicChannelBuffer extends AbstractChannelBuffer {
             newCapacity <<= 1;
         }
 
-        ChannelBuffer newBuffer = factory().getBuffer(newCapacity);
-        newBuffer.writeBytes(buffer, 0, writerIndex());
-        buffer = newBuffer;
+        ChannelBuffer newBuffer = factory().getBuffer(newCapacity);     // 创建一个新的 ChannelBuffer（空间扩大为原来的两倍）
+        newBuffer.writeBytes(buffer, 0, writerIndex());     // 将原来 ChannelBuffer 中的数据拷贝到新 ChannelBuffer 中
+        buffer = newBuffer;     // 将 buffer 字段指向新 ChannelBuffer 对象，完成整个扩容操作
     }
 
 

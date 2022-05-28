@@ -23,6 +23,8 @@ import java.io.OutputStream;
 import java.nio.ByteBuffer;
 
 /**
+ * 与 Netty4 中 ByteBuf 抽象类的设计基本一致。
+ *
  * A random and sequential accessible sequence of zero or more bytes (octets).
  * This interface provides an abstract view for one or more primitive byte
  * arrays ({@code byte[]}) and {@linkplain ByteBuffer NIO buffers}.
@@ -204,6 +206,8 @@ import java.nio.ByteBuffer;
 public interface ChannelBuffer extends Comparable<ChannelBuffer> {
 
     /**
+     * 获取 ChannelBuffer 容量
+     *
      * Returns the number of bytes (octets) this buffer can contain.
      */
     int capacity();
@@ -278,12 +282,16 @@ public interface ChannelBuffer extends Comparable<ChannelBuffer> {
     boolean equals(Object o);
 
     /**
+     * 返回创建 ChannelBuffer 的工厂对象
+     *
      * Returns the factory which creates a {@link ChannelBuffer} whose type and
      * default {@link java.nio.ByteOrder} are same with this buffer.
      */
     ChannelBufferFactory factory();
 
     /**
+     *
+     *
      * Gets a byte at the specified absolute {@code index} in this buffer. This
      * method does not modify {@code readerIndex} or {@code writerIndex} of this
      * buffer.
@@ -293,6 +301,8 @@ public interface ChannelBuffer extends Comparable<ChannelBuffer> {
      *                                   greater than {@code this.capacity}
      */
     byte getByte(int index);
+
+    // getBytes()、setBytes()：从参数指定的位置读、写当前 ChannelBuffer，不会修改 readerIndex 和 writerIndex 指针的位置。
 
     /**
      * Transfers this buffer's data to the specified destination starting at the
@@ -412,6 +422,8 @@ public interface ChannelBuffer extends Comparable<ChannelBuffer> {
     boolean isDirect();
 
     /**
+     * 记录当前 readerIndex 指针
+     *
      * Marks the current {@code readerIndex} in this buffer.  You can reposition
      * the current {@code readerIndex} to the marked {@code readerIndex} by
      * calling {@link #resetReaderIndex()}. The initial value of the marked
@@ -449,6 +461,8 @@ public interface ChannelBuffer extends Comparable<ChannelBuffer> {
     byte readByte();
 
     /**
+     * 从 readerIndex 指针开始读取数据，并移动 readerIndex 指针。
+     *
      * Transfers this buffer's data to the specified destination starting at the
      * current {@code readerIndex} and increases the {@code readerIndex} by the
      * number of the transferred bytes (= {@code dst.length}).
@@ -545,6 +559,8 @@ public interface ChannelBuffer extends Comparable<ChannelBuffer> {
     ChannelBuffer readBytes(int length);
 
     /**
+     * resetReaderIndex() 方法会将 readerIndex 指针重置到 markReaderIndex() 方法标记的位置。
+     *
      * Repositions the current {@code readerIndex} to the marked {@code
      * readerIndex} in this buffer.
      *
@@ -815,6 +831,8 @@ public interface ChannelBuffer extends Comparable<ChannelBuffer> {
     void writeByte(int value);
 
     /**
+     * 会从 writerIndex 指针位置开始写入数据，并移动 writerIndex 指针。
+     *
      * Transfers the specified source array's data to this buffer starting at
      * the current {@code writerIndex} and increases the {@code writerIndex} by
      * the number of the transferred bytes (= {@code src.length}).

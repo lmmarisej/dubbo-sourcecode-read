@@ -19,6 +19,9 @@ package org.apache.dubbo.remoting.buffer;
 
 import java.nio.ByteBuffer;
 
+/**
+ * ChannelBuffer 工具类。
+ */
 public final class ChannelBuffers {
 
     public static final ChannelBuffer EMPTY_BUFFER = new HeapChannelBuffer(0);
@@ -28,6 +31,9 @@ public final class ChannelBuffers {
     private ChannelBuffers() {
     }
 
+    /**
+     * 创建 DynamicChannelBuffer 对象，初始化大小由第一个参数指定，默认为 256。
+     */
     public static ChannelBuffer dynamicBuffer() {
         return dynamicBuffer(DEFAULT_CAPACITY);
     }
@@ -67,7 +73,7 @@ public final class ChannelBuffers {
         if (array.length == 0) {
             return EMPTY_BUFFER;
         }
-        return new HeapChannelBuffer(array);
+        return new HeapChannelBuffer(array);        // 将传入的 byte[] 数字封装成 HeapChannelBuffer 对象。
     }
 
     public static ChannelBuffer wrappedBuffer(ByteBuffer buffer) {
@@ -87,11 +93,14 @@ public final class ChannelBuffers {
         }
 
         ChannelBuffer buffer = new ByteBufferBackedChannelBuffer(
-            ByteBuffer.allocateDirect(capacity));
+            ByteBuffer.allocateDirect(capacity));       // 堆外内存
         buffer.clear();
         return buffer;
     }
 
+    /**
+     * 比较两个 ChannelBuffer 是否相同，其中会逐个比较两个 ChannelBuffer 中的前 7 个可读字节。
+     */
     public static boolean equals(ChannelBuffer bufferA, ChannelBuffer bufferB) {
         final int aLen = bufferA.readableBytes();
         if (aLen != bufferB.readableBytes()) {
@@ -132,6 +141,9 @@ public final class ChannelBuffers {
         return hashCode;
     }
 
+    /**
+     * 用于比较两个 ChannelBuffer 的大小，会逐个比较两个 ChannelBuffer 中的全部可读字节
+     */
     public static int compare(ChannelBuffer bufferA, ChannelBuffer bufferB) {
         final int aLen = bufferA.readableBytes();
         final int bLen = bufferB.readableBytes();

@@ -22,7 +22,7 @@ import java.io.InputStream;
 
 public class ChannelBufferInputStream extends InputStream {
 
-    private final ChannelBuffer buffer;
+    private final ChannelBuffer buffer;     // 底层封装了一个 ChannelBuffer
     private final int startIndex;
     private final int endIndex;
 
@@ -66,6 +66,9 @@ public class ChannelBufferInputStream extends InputStream {
         return true;
     }
 
+    /**
+     * 全部都是从 ChannelBuffer 中读取数据
+     */
     @Override
     public int read() throws IOException {
         if (!buffer.readable()) {

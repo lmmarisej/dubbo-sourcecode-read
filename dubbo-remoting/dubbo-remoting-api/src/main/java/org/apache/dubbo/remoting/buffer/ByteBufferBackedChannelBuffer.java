@@ -22,9 +22,12 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.ByteBuffer;
 
+/**
+ * 基于 Java NIO 中 ByteBuffer 的 ChannelBuffer 实现
+ */
 public class ByteBufferBackedChannelBuffer extends AbstractChannelBuffer {
 
-    private final ByteBuffer buffer;
+    private final ByteBuffer buffer;            // JDK NIO buffer
 
     private final int capacity;
 
@@ -88,11 +91,11 @@ public class ByteBufferBackedChannelBuffer extends AbstractChannelBuffer {
     public void getBytes(int index, byte[] dst, int dstIndex, int length) {
         ByteBuffer data = buffer.duplicate();
         try {
-            data.limit(index + length).position(index);
+            data.limit(index + length).position(index);     // 移动 ByteBuffer 中的指针
         } catch (IllegalArgumentException e) {
             throw new IndexOutOfBoundsException();
         }
-        data.get(dst, dstIndex, length);
+        data.get(dst, dstIndex, length);         // 通过 ByteBuffer 的 get() 方法实现读取
     }
 
 
@@ -101,11 +104,11 @@ public class ByteBufferBackedChannelBuffer extends AbstractChannelBuffer {
         ByteBuffer data = buffer.duplicate();
         int bytesToCopy = Math.min(capacity() - index, dst.remaining());
         try {
-            data.limit(index + bytesToCopy).position(index);
+            data.limit(index + bytesToCopy).position(index);      // 移动 ByteBuffer 中的指针
         } catch (IllegalArgumentException e) {
             throw new IndexOutOfBoundsException();
         }
-        dst.put(data);
+        dst.put(data);       // 将数据写入底层的 ByteBuffer 中
     }
 
 

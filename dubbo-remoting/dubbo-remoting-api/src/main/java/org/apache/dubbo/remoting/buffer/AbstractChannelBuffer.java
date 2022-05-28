@@ -22,6 +22,9 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.ByteBuffer;
 
+/**
+ * 实现了 ChannelBuffer 接口的大部分方法，其核心是维护 reader/writer、markedWriter/markedReader 四个索引。
+ */
 public abstract class AbstractChannelBuffer implements ChannelBuffer {
 
     private int readerIndex;
@@ -191,9 +194,10 @@ public abstract class AbstractChannelBuffer implements ChannelBuffer {
 
     @Override
     public void readBytes(byte[] dst, int dstIndex, int length) {
-        checkReadableBytes(length);
+        checkReadableBytes(length);     // 检测可读字节数是否足够
+        // 将readerIndex之后的length个字节数读取到dst数组中dstIndex~dstIndex+length的位置
         getBytes(readerIndex, dst, dstIndex, length);
-        readerIndex += length;
+        readerIndex += length;          // 将readerIndex后移length个字节
     }
 
     @Override

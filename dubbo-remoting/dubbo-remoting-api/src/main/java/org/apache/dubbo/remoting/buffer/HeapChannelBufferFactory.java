@@ -19,6 +19,9 @@ package org.apache.dubbo.remoting.buffer;
 
 import java.nio.ByteBuffer;
 
+/**
+ * HeapChannelBuffer 工厂方法模式。
+ */
 public class HeapChannelBufferFactory implements ChannelBufferFactory {
 
     private static final HeapChannelBufferFactory INSTANCE = new HeapChannelBufferFactory();
@@ -33,7 +36,7 @@ public class HeapChannelBufferFactory implements ChannelBufferFactory {
 
     @Override
     public ChannelBuffer getBuffer(int capacity) {
-        return ChannelBuffers.buffer(capacity);
+        return ChannelBuffers.buffer(capacity);         // 创建一个指定大小 HeapChannelBuffer 对象
     }
 
     @Override
