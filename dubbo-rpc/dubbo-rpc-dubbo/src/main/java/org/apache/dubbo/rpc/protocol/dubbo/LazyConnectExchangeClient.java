@@ -41,7 +41,7 @@ import static org.apache.dubbo.rpc.protocol.dubbo.Constants.DEFAULT_LAZY_REQUEST
 import static org.apache.dubbo.rpc.protocol.dubbo.Constants.LAZY_REQUEST_WITH_WARNING_KEY;
 
 /**
- * dubbo protocol support class.
+ * ExchangeClient 的装饰器，它会在原有 ExchangeClient 对象的基础上添加懒加载的功能。
  */
 @SuppressWarnings("deprecation")
 final class LazyConnectExchangeClient implements ExchangeClient {
@@ -65,7 +65,7 @@ final class LazyConnectExchangeClient implements ExchangeClient {
     }
 
     private void initClient() throws RemotingException {
-        if (client != null) {
+        if (client != null) {       // 底层 Client 已经初始化过了，这里不再初始化
             return;
         }
         if (logger.isInfoEnabled()) {
@@ -76,7 +76,7 @@ final class LazyConnectExchangeClient implements ExchangeClient {
             if (client != null) {
                 return;
             }
-            this.client = Exchangers.connect(url, requestHandler);
+            this.client = Exchangers.connect(url, requestHandler);   // 通过 Exchangers 门面类，创建 ExchangeClient 对象
         } finally {
             connectLock.unlock();
         }

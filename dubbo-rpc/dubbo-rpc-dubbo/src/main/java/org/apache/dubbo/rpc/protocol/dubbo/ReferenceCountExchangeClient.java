@@ -34,7 +34,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import static org.apache.dubbo.common.constants.CommonConstants.DEFAULT_SERVER_SHUTDOWN_TIMEOUT;
 
 /**
- * dubbo protocol support class.
+ * 在原始 ExchangeClient 对象基础上添加了引用计数的功能。
  */
 @SuppressWarnings("deprecation")
 final class ReferenceCountExchangeClient implements ExchangeClient {
@@ -168,8 +168,14 @@ final class ReferenceCountExchangeClient implements ExchangeClient {
 
     /**
      * when destroy unused invoker, closeAll should be true
+     *
+     *  close() 方法中则会减少引用次数。
+     *
+     *  ReferenceCountExchangeClient 的存在，只有引用减到 0，底层的 Client 才会真正销毁。
      */
     private void closeInternal(int timeout, boolean closeAll) {
+        // 引用次数减到0，关闭底层的ExchangeClient
+        // 具体操作有：停掉心跳任务、重连任务以及关闭底层Channel
         if (closeAll || referenceCount.decrementAndGet() <= 0) {
             if (timeout == 0) {
                 client.close();
@@ -188,6 +194,8 @@ final class ReferenceCountExchangeClient implements ExchangeClient {
     }
 
     /**
+     * 创建 LazyConnectExchangeClient，并将 client 字段指向该对象
+     *
      * when closing the client, the client needs to be set to LazyConnectExchangeClient, and if a new call is made,
      * the client will "resurrect".
      *
@@ -196,10 +204,12 @@ final class ReferenceCountExchangeClient implements ExchangeClient {
     private void replaceWithLazyClient() {
         // start warning at second replaceWithLazyClient()
         if (disconnectCount.getAndIncrement() % warningPeriod == 1) {
-            logger.warn(url.getAddress() + " " + url.getServiceKey() + " safe guard client , should not be called ,must have a bug.");
+            logger.warn(url.getAddress() + " " + url.getServiceKey() + " safe guard client , should not be called, must have a bug.");
         }
 
-        /**
+        /*
+         * 如果当前 client 字段已经指向了 LazyConnectExchangeClient，则不需要再次创建 LazyConnectExchangeClient 兜底了
+         *
          * the order of judgment in the if statement cannot be changed.
          */
         if (!(client instanceof LazyConnectExchangeClient)) {

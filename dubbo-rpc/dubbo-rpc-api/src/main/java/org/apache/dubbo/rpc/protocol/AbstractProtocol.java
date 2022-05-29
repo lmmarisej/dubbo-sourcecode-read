@@ -86,9 +86,11 @@ public abstract class AbstractProtocol implements Protocol, ScopeModelAware {
         server.getAttributes().put(SHUTDOWN_WAIT_KEY, serverShutdownTimeout);
     }
 
+    // 返回的阻塞时长
     protected int getServerShutdownTimeout(ProtocolServer server) {
         return (int) server.getAttributes().getOrDefault(SHUTDOWN_WAIT_KEY, DEFAULT_SERVER_SHUTDOWN_TIMEOUT);
     }
+
 
     @Override
     public void destroy() {
