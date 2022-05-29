@@ -94,7 +94,7 @@ public class DecodeableRpcInvocation extends RpcInvocation implements Codec, Dec
     public void decode() throws Exception {
         if (!hasDecoded && channel != null && inputStream != null) {
             try {
-                decode(channel, inputStream);
+                decode(channel, inputStream);       // 解码
             } catch (Throwable e) {
                 if (log.isWarnEnabled()) {
                     log.warn("Decode rpc invocation failed: " + e.getMessage(), e);
@@ -119,7 +119,7 @@ public class DecodeableRpcInvocation extends RpcInvocation implements Codec, Dec
     @Override
     public Object decode(Channel channel, InputStream input) throws IOException {
         ObjectInput in = CodecSupport.getSerialization(channel.getUrl(), serializationType)
-            .deserialize(channel.getUrl(), input);
+            .deserialize(channel.getUrl(), input);      // 反序列化
         this.put(SERIALIZATION_ID_KEY, serializationType);
 
         String dubboVersion = in.readUTF();

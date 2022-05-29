@@ -46,11 +46,15 @@ public class RpcServiceContext extends RpcContext {
 
     private URL url;
 
+    // 别用来记录调用的方法名、参数类型列表以及具体的参数列表，与相关 Invocation 对象中的信息一致。
+
     private String methodName;
 
     private Class<?>[] parameterTypes;
 
     private Object[] arguments;
+
+    // 记录了自己和远端的地址。
 
     private InetSocketAddress localAddress;
 
@@ -67,6 +71,7 @@ public class RpcServiceContext extends RpcContext {
 
     // now we don't use the 'values' map to hold these objects
     // we want these objects to be as generic as possible
+    // 可用于记录底层关联的请求和响应。
     private Object request;
     private Object response;
 
@@ -157,10 +162,7 @@ public class RpcServiceContext extends RpcContext {
     }
 
     /**
-     * get future.
-     *
-     * @param <T>
-     * @return future
+     * 不是很建议用 get() 这样阻塞的方式来获取结果，因为这样就丢失了异步操作带来的性能提升。
      */
     @Override
     @SuppressWarnings("unchecked")

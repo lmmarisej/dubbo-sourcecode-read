@@ -44,7 +44,7 @@ public class ListenerExporterWrapper<T> implements Exporter<T> {
         this.listeners = listeners;
         if (CollectionUtils.isNotEmpty(listeners)) {
             RuntimeException exception = null;
-            for (ExporterListener listener : listeners) {
+            for (ExporterListener listener : listeners) {    // 循环调用全部 ExporterListener 的 exported() 方法，通知其服务暴露的事件
                 if (listener != null) {
                     try {
                         listener.exported(this);

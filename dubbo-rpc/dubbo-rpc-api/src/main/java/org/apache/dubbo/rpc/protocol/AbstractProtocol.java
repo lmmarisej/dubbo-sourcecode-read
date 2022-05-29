@@ -128,6 +128,9 @@ public abstract class AbstractProtocol implements Protocol, ScopeModelAware {
         return protocolBindingRefer(type, url);
     }
 
+    /**
+     * 会根据调用的业务接口类型以及 URL 创建底层的 ExchangeClient 集合，然后封装成 DubboInvoker 对象返回。
+     */
     @Deprecated
     protected abstract <T> Invoker<T> protocolBindingRefer(Class<T> type, URL url) throws RpcException;
 

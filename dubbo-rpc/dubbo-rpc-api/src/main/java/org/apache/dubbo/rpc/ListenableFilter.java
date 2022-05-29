@@ -30,6 +30,7 @@ import java.util.concurrent.ConcurrentMap;
 public abstract class ListenableFilter implements Filter {
 
     protected Listener listener = null;
+    // 在原有 Filter 的基础上添加了一个 listeners 集合用来记录一次请求需要触发的监听器。
     protected final ConcurrentMap<Invocation, Listener> listeners = new ConcurrentHashMap<>();
 
     public Listener listener() {
@@ -43,6 +44,9 @@ public abstract class ListenableFilter implements Filter {
         }
         return invListener;
     }
+
+    // 可以 addListener 添加 Filter.Listener 实例进行监听，完成一次 invoke() 方法之后，
+    // 这些添加的 Filter.Listener 实例调用 removeListener 立即从 listeners 集合中删除，这些 Filter.Listener 实例不会在调用之间共享。
 
     public void addListener(Invocation invocation, Listener listener) {
         listeners.putIfAbsent(invocation, listener);

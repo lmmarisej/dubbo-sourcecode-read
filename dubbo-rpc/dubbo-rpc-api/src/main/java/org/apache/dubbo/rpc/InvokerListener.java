@@ -21,6 +21,8 @@ import org.apache.dubbo.common.extension.SPI;
 /**
  * 服务引用的过程中，我们可以添加一些 Listener 来监听相应的事件。
  *
+ * 可以提供其实现来监听 refer 事件以及 destroy 事件，相应地要实现 referred() 方法以及 destroyed() 方法。
+ *
  * InvokerListener. (SPI, Singleton, ThreadSafe)
  */
 @SPI

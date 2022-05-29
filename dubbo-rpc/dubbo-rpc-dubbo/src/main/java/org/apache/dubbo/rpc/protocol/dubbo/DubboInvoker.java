@@ -19,10 +19,12 @@ package org.apache.dubbo.rpc.protocol.dubbo;
 import org.apache.dubbo.common.URL;
 import org.apache.dubbo.common.config.ConfigurationUtils;
 import org.apache.dubbo.common.utils.AtomicPositiveInteger;
+import org.apache.dubbo.remoting.Channel;
 import org.apache.dubbo.remoting.Constants;
 import org.apache.dubbo.remoting.RemotingException;
 import org.apache.dubbo.remoting.TimeoutException;
 import org.apache.dubbo.remoting.exchange.ExchangeClient;
+import org.apache.dubbo.remoting.exchange.support.header.HeaderExchangeHandler;
 import org.apache.dubbo.rpc.AppResponse;
 import org.apache.dubbo.rpc.AsyncRpcResult;
 import org.apache.dubbo.rpc.FutureContext;
@@ -55,7 +57,8 @@ import static org.apache.dubbo.common.constants.CommonConstants.VERSION_KEY;
 import static org.apache.dubbo.rpc.Constants.TOKEN_KEY;
 
 /**
- * DubboInvoker
+ * 是 AbstractInvoker 的实现类，在其 doInvoke() 方法中首先会选择此次调用使用 ExchangeClient 对象，
+ * 然后确定此次调用是否需要返回值，最后调用 ExchangeClient.request() 方法发送请求，对返回的 Future 进行简单封装并返回。
  */
 public class DubboInvoker<T> extends AbstractInvoker<T> {
 
@@ -84,14 +87,18 @@ public class DubboInvoker<T> extends AbstractInvoker<T> {
         this.serverShutdownTimeout = ConfigurationUtils.getServerShutdownTimeout(getUrl().getScopeModel());
     }
 
+    /**
+     * @see HeaderExchangeHandler#received(Channel, Object)
+     */
     @Override
     protected Result doInvoke(final Invocation invocation) throws Throwable {
         RpcInvocation inv = (RpcInvocation) invocation;
-        final String methodName = RpcUtils.getMethodName(invocation);
+        final String methodName = RpcUtils.getMethodName(invocation);   // 此次调用的方法名称
+        // 向Invocation中添加附加信息，这里将URL的path和version添加到附加信息中
         inv.setAttachment(PATH_KEY, getUrl().getPath());
         inv.setAttachment(VERSION_KEY, version);
 
-        ExchangeClient currentClient;
+        ExchangeClient currentClient;        // 选择一个ExchangeClient实例
         if (clients.length == 1) {
             currentClient = clients[0];
         } else {
@@ -99,19 +106,24 @@ public class DubboInvoker<T> extends AbstractInvoker<T> {
         }
         try {
             boolean isOneway = RpcUtils.isOneway(getUrl(), invocation);
-            int timeout = calculateTimeout(invocation, methodName);
+            int timeout = calculateTimeout(invocation, methodName);     // 根据调用的方法名称和配置计算此次调用的超时时间
             invocation.setAttachment(TIMEOUT_KEY, timeout);
+            // 不需要关注返回值的请求
             if (isOneway) {
                 boolean isSent = getUrl().getMethodParameter(methodName, Constants.SENT_KEY, false);
                 currentClient.send(inv, isSent);
                 return AsyncRpcResult.newDefaultAsyncResult(invocation);
-            } else {
+            }
+            // 需要关注返回值的请求
+            else {
+                // 获取处理响应的线程池，对于同步请求，会使用 ThreadlessExecutor; 对于异步请求，则会使用共享的线程池
                 ExecutorService executor = getCallbackExecutor(getUrl(), inv);
+                // 使用上面选出的 ExchangeClient 执行 request() 方法，将请求发送出去
                 CompletableFuture<AppResponse> appResponseFuture =
                         currentClient.request(inv, timeout, executor).thenApply(obj -> (AppResponse) obj);
                 // save for 2.6.x compatibility, for example, TraceFilter in Zipkin uses com.alibaba.xxx.FutureAdapter
                 FutureContext.getContext().setCompatibleFuture(appResponseFuture);
-                AsyncRpcResult result = new AsyncRpcResult(appResponseFuture, inv);
+                AsyncRpcResult result = new AsyncRpcResult(appResponseFuture, inv);       // 这里将AppResponse封装成AsyncRpcResult返回
                 result.setExecutor(executor);
                 return result;
             }

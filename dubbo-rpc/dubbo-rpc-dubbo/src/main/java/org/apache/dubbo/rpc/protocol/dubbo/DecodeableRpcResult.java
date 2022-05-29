@@ -43,6 +43,9 @@ import java.lang.reflect.Type;
 import static org.apache.dubbo.rpc.Constants.SERIALIZATION_ID_KEY;
 import static org.apache.dubbo.rpc.Constants.SERIALIZATION_SECURITY_CHECK_KEY;
 
+/**
+ * 表示的是一个响应，与其对应的是 {@link  org.apache.dubbo.rpc.protocol.dubbo.DecodeableRpcInvocation}（它表示的是请求）。
+ */
 public class DecodeableRpcResult extends AppResponse implements Codec, Decodeable {
 
     private static final Logger log = LoggerFactory.getLogger(DecodeableRpcResult.class);
@@ -87,9 +90,10 @@ public class DecodeableRpcResult extends AppResponse implements Codec, Decodeabl
             Thread.currentThread().setContextClassLoader(invocation.getServiceModel().getClassLoader());
         }
         ObjectInput in = CodecSupport.getSerialization(channel.getUrl(), serializationType)
-                .deserialize(channel.getUrl(), input);
+                .deserialize(channel.getUrl(), input);      // 反序列化
 
-        byte flag = in.readByte();
+        byte flag = in.readByte();  // 读取一个byte的标志位
+        // 根据标志位判断当前结果中包含的信息，并调用不同的方法进行处理
         switch (flag) {
             case DubboCodec.RESPONSE_NULL_VALUE:
                 break;

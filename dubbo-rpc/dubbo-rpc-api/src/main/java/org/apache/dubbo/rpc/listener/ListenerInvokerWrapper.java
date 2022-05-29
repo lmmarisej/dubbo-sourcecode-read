@@ -20,11 +20,7 @@ import org.apache.dubbo.common.URL;
 import org.apache.dubbo.common.logger.Logger;
 import org.apache.dubbo.common.logger.LoggerFactory;
 import org.apache.dubbo.common.utils.CollectionUtils;
-import org.apache.dubbo.rpc.Invocation;
-import org.apache.dubbo.rpc.Invoker;
-import org.apache.dubbo.rpc.InvokerListener;
-import org.apache.dubbo.rpc.Result;
-import org.apache.dubbo.rpc.RpcException;
+import org.apache.dubbo.rpc.*;
 
 import java.util.List;
 
@@ -35,9 +31,9 @@ public class ListenerInvokerWrapper<T> implements Invoker<T> {
 
     private static final Logger logger = LoggerFactory.getLogger(ListenerInvokerWrapper.class);
 
-    private final Invoker<T> invoker;
+    private final Invoker<T> invoker;       // 底层被修饰的Invoker对象
 
-    private final List<InvokerListener> listeners;
+    private final List<InvokerListener> listeners;      // 监听器集合
 
     public ListenerInvokerWrapper(Invoker<T> invoker, List<InvokerListener> listeners) {
         if (invoker == null) {
@@ -46,7 +42,7 @@ public class ListenerInvokerWrapper<T> implements Invoker<T> {
         this.invoker = invoker;
         this.listeners = listeners;
         if (CollectionUtils.isNotEmpty(listeners)) {
-            for (InvokerListener listener : listeners) {
+            for (InvokerListener listener : listeners) {        // 在服务引用过程中触发全部InvokerListener监听器
                 if (listener != null) {
                     try {
                         listener.referred(invoker);
@@ -86,9 +82,10 @@ public class ListenerInvokerWrapper<T> implements Invoker<T> {
     @Override
     public void destroy() {
         try {
-            invoker.destroy();
+            invoker.destroy();      // 调用被修饰 Invoker 对象的 destroy() 方法
         } finally {
             if (CollectionUtils.isNotEmpty(listeners)) {
+                // 循环调用全部 InvokerListener 的 destroyed() 方法，通知它们该 Invoker 被销毁的事件
                 for (InvokerListener listener : listeners) {
                     if (listener != null) {
                         try {

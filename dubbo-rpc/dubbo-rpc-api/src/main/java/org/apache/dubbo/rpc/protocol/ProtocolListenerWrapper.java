@@ -20,13 +20,7 @@ import org.apache.dubbo.common.URL;
 import org.apache.dubbo.common.extension.Activate;
 import org.apache.dubbo.common.utils.StringUtils;
 import org.apache.dubbo.common.utils.UrlUtils;
-import org.apache.dubbo.rpc.Exporter;
-import org.apache.dubbo.rpc.ExporterListener;
-import org.apache.dubbo.rpc.Invoker;
-import org.apache.dubbo.rpc.InvokerListener;
-import org.apache.dubbo.rpc.Protocol;
-import org.apache.dubbo.rpc.ProtocolServer;
-import org.apache.dubbo.rpc.RpcException;
+import org.apache.dubbo.rpc.*;
 import org.apache.dubbo.rpc.listener.ListenerExporterWrapper;
 import org.apache.dubbo.rpc.listener.ListenerInvokerWrapper;
 import org.apache.dubbo.rpc.model.ScopeModelUtil;
@@ -39,7 +33,8 @@ import static org.apache.dubbo.common.constants.CommonConstants.INVOKER_LISTENER
 import static org.apache.dubbo.common.constants.RegistryConstants.REGISTRY_CLUSTER_TYPE_KEY;
 
 /**
- * ListenerProtocol
+ * 是 Protocol 接口的装饰器，在其 export() 方法和 refer() 方法中，
+ * 会分别在原有 Invoker 基础上封装一层 ListenerExporterWrapper 和 ListenerInvokerWrapper。
  */
 @Activate(order = 200)
 public class ProtocolListenerWrapper implements Protocol {
@@ -77,9 +72,9 @@ public class ProtocolListenerWrapper implements Protocol {
         Invoker<T> invoker = protocol.refer(type, url);
         if (StringUtils.isEmpty(url.getParameter(REGISTRY_CLUSTER_TYPE_KEY))) {
             invoker = new ListenerInvokerWrapper<>(invoker,
-                    Collections.unmodifiableList(
-                        ScopeModelUtil.getExtensionLoader(InvokerListener.class, invoker.getUrl().getScopeModel())
-                                    .getActivateExtension(url, INVOKER_LISTENER_KEY)));
+                Collections.unmodifiableList(
+                    ScopeModelUtil.getExtensionLoader(InvokerListener.class, invoker.getUrl().getScopeModel())
+                        .getActivateExtension(url, INVOKER_LISTENER_KEY)));
         }
         return invoker;
     }

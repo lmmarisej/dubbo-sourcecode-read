@@ -28,7 +28,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
 /**
- * 特殊类型的线程池，ThreadlessExecutor 内部不管理任何线程。
+ * 特殊类型的线程池，对于同步请求，会使用 ThreadlessExecutor，ThreadlessExecutor 内部不管理任何线程。
  *
  * 因为在 Dubbo 2.7.5 版本之前，在 WrappedChannelHandler 中会为每个连接启动一个线程池。
  *

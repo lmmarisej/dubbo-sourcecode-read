@@ -20,7 +20,7 @@ import org.apache.dubbo.common.extension.ExtensionScope;
 import org.apache.dubbo.common.extension.SPI;
 
 /**
- * 在进行服务引用时会进行一系列的过滤，其中包括了很多过滤器。
+ * 在进行服务引用时会进行一系列的过滤，其中包括了很多过滤器，将各个 Filter 串联成 Filter 链并与 Invoker 实例相关。
  *
  * Filter 接口有非常多的扩展实现类，在一个场景中可能需要某几个 Filter 扩展实现类协同工作，而另一个场景中可能需要另外几个实现类一起工作。
  *

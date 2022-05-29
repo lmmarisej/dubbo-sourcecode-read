@@ -34,6 +34,8 @@ public interface BaseFilter {
     interface Listener {         // 用于监听响应以及异常
 
         /**
+         * 当 invoke() 方法执行正常结束时，会调用该 Listener 的 onResponse() 方法进行通知
+         *
          * This method will only be called on successful remote rpc execution, that means, the service in on remote received
          * the request and the result (normal or exceptional) returned successfully.
          *
@@ -44,6 +46,8 @@ public interface BaseFilter {
         void onResponse(Result appResponse, Invoker<?> invoker, Invocation invocation);
 
         /**
+         * 当 invoke() 方法执行出现异常时，会调用该 Listener 的 onError() 方法进行通知。
+         *
          * This method will be called on detection of framework exceptions, for example, TimeoutException, NetworkException
          * Exception raised in Filters, etc.
          *

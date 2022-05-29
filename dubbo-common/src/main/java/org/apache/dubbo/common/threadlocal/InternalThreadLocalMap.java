@@ -20,6 +20,8 @@ import java.util.Arrays;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
+ * 如果当前线程为原生 Thread 类型，则根据 slowThreadLocalMap 获取 InternalThreadLocalMap。
+ *
  * The internal data structure that stores the threadLocal variables for Netty and all {@link InternalThread}s.
  * Note that this class is for internal use only. Use {@link InternalThread}
  * unless you know what you are doing.
@@ -28,7 +30,7 @@ public final class InternalThreadLocalMap {
 
     private Object[] indexedVariables;
 
-    private static ThreadLocal<InternalThreadLocalMap> slowThreadLocalMap = new ThreadLocal<InternalThreadLocalMap>();
+    private static ThreadLocal<InternalThreadLocalMap> slowThreadLocalMap = new ThreadLocal<>();
 
     private static final AtomicInteger NEXT_INDEX = new AtomicInteger();
 
@@ -40,11 +42,11 @@ public final class InternalThreadLocalMap {
     private static final int ARRAY_LIST_CAPACITY_EXPAND_THRESHOLD = 1 << 30;
 
     public static InternalThreadLocalMap getIfSet() {
-        Thread thread = Thread.currentThread();
+        Thread thread = Thread.currentThread();     // 获取当前线程
         if (thread instanceof InternalThread) {
-            return ((InternalThread) thread).threadLocalMap();
+            return ((InternalThread) thread).threadLocalMap();  // 如果是InternalThread类型，直接获取InternalThreadLocalMap返回
         }
-        return slowThreadLocalMap.get();
+        return slowThreadLocalMap.get();    // 原生 Thread 则需要通过 ThreadLocal 获取 InternalThreadLocalMap
     }
 
     public static InternalThreadLocalMap get() {
@@ -115,12 +117,12 @@ public final class InternalThreadLocalMap {
      */
     public boolean setIndexedVariable(int index, Object value) {
         Object[] lookup = indexedVariables;
-        if (index < lookup.length) {
+        if (index < lookup.length) {                // 将value存储到index指定的位置
             Object oldValue = lookup[index];
             lookup[index] = value;
             return oldValue == UNSET;
         } else {
-            expandIndexedVariableTableAndSet(index, value);
+            expandIndexedVariableTableAndSet(index, value);  // 当index超过indexedVariables数组的长度时，需要对indexedVariables数组进行扩容
             return true;
         }
     }

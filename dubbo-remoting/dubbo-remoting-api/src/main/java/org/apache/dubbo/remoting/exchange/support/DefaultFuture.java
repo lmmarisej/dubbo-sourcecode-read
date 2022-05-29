@@ -44,6 +44,8 @@ import static org.apache.dubbo.common.constants.CommonConstants.TIMEOUT_KEY;
 
 /**
  * 表示此次请求-响应是否完成，也就是说，要收到响应为 Future 才算完成。
+ *
+ * 无论是 SYNC 模式、ASYNC 模式还是 FUTURE 模式，都是围绕 DefaultFuture 展开的。
  */
 public class DefaultFuture extends CompletableFuture<Object> {
 

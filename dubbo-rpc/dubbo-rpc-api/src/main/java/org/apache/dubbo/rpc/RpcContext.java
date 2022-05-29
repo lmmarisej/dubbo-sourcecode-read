@@ -31,6 +31,10 @@ import java.util.concurrent.Future;
 
 
 /**
+ * RpcContext 是线程级别的上下文信息，每个线程绑定一个 RpcContext 对象，底层依赖 ThreadLocal 实现。
+ *
+ * RpcContext 主要用于存储一个线程中一次请求的临时状态，当线程处理新的请求（Provider 端）或是线程发起新的请求（Consumer 端）时，RpcContext 中存储的内容就会更新。
+ *
  * Thread local context. (API, ThreadLocal, ThreadSafe)
  * <p>
  * Note: RpcContext is a temporary state holder. States in RpcContext changes every time when request is sent or received.
@@ -63,6 +67,7 @@ public class RpcContext {
         }
     };
 
+    // 可用于记录调用上下文的附加信息，这些信息会被添加到 Invocation 中，并传递到远端节点。
     private static final InternalThreadLocal<RpcContextAttachment> CLIENT_ATTACHMENT = new InternalThreadLocal<RpcContextAttachment>() {
         @Override
         protected RpcContextAttachment initialValue() {
@@ -77,6 +82,7 @@ public class RpcContext {
         }
     };
 
+    // 分别用来记录调用的方法名、参数类型列表以及具体的参数列表，与相关 Invocation 对象中的信息一致。
     private static final InternalThreadLocal<RpcServiceContext> SERVICE_CONTEXT = new InternalThreadLocal<RpcServiceContext>() {
         @Override
         protected RpcServiceContext initialValue() {
@@ -362,7 +368,7 @@ public class RpcContext {
     }
 
     /**
-     * set local address.
+     * 记录了自己的地址。
      *
      * @param host
      * @param port
@@ -822,6 +828,8 @@ public class RpcContext {
     }
 
     /**
+     * RpcContext 是与线程绑定
+     *
      * Used to temporarily store and restore all kinds of contexts of current thread.
      */
     public static class RestoreContext {

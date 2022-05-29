@@ -38,12 +38,15 @@ import java.util.TreeMap;
 public class DefaultFilterChainBuilder implements FilterChainBuilder {
 
     /**
+     * 将各个 Filter 串联成 Filter 链并与 Invoker 实例相关。
+     *
      * build consumer/provider filter chain
      */
     @Override
     public <T> Invoker<T> buildInvokerChain(final Invoker<T> originalInvoker, String key, String group) {
         Invoker<T> last = originalInvoker;
         URL url = originalInvoker.getUrl();
+        // 根据 URL 中携带的配置信息，确定当前激活的 Filter 扩展实现有哪些，形成 Filter 集合
         List<ModuleModel> moduleModels = getModuleModelsFromUrl(url);
         List<Filter> filters;
         if (moduleModels != null && moduleModels.size() == 1) {
@@ -67,6 +70,7 @@ public class DefaultFilterChainBuilder implements FilterChainBuilder {
             for (int i = filters.size() - 1; i >= 0; i--) {
                 final Filter filter = filters.get(i);
                 final Invoker<T> next = last;
+                // 由 Filter 内部的逻辑决定是否将调用传递到下一个 Filter 执行。
                 last = new CopyOfFilterChainNode<>(originalInvoker, next, filter);
             }
             return new CallbackRegistrationInvoker<>(last, filters);
