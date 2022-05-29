@@ -19,25 +19,20 @@ package org.apache.dubbo.rpc;
 import org.apache.dubbo.common.extension.SPI;
 
 /**
+ * 服务引用的过程中，我们可以添加一些 Listener 来监听相应的事件。
+ *
  * InvokerListener. (SPI, Singleton, ThreadSafe)
  */
 @SPI
 public interface InvokerListener {
 
     /**
-     * The invoker referred
-     *
-     * @param invoker
-     * @throws RpcException
-     * @see org.apache.dubbo.rpc.Protocol#refer(Class, org.apache.dubbo.common.URL)
+     * 当服务引用的时候，会触发该方法
      */
     void referred(Invoker<?> invoker) throws RpcException;
 
     /**
-     * The invoker destroyed.
-     *
-     * @param invoker
-     * @see org.apache.dubbo.rpc.Invoker#destroy()
+     * 当销毁引用的服务时，会触发该方法
      */
     void destroyed(Invoker<?> invoker);
 

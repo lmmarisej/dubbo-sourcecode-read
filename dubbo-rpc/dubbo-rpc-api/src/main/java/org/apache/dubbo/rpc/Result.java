@@ -31,6 +31,9 @@ import java.util.function.Function;
 
 
 /**
+ *  Invoker.invoke() 方法的返回值，抽象了一次调用的返回值，其中包含了被调用方返回值（或是异常）以及附加信息，
+ *  我们也可以添加回调方法，在 RPC 调用方法结束时会触发这些回调。
+ *
  * (API, Prototype, NonThreadSafe)
  *
  * An RPC {@link Result}.
@@ -46,33 +49,26 @@ import java.util.function.Function;
  */
 public interface Result extends Serializable {
 
-    /**
-     * Get invoke result.
-     *
-     * @return result. if no result return null.
+    /*
+     * 获取/设置此次调用的返回值
      */
+
     Object getValue();
 
     void setValue(Object value);
 
-    /**
-     * Get exception.
-     *
-     * @return exception. if no exception return null.
+    /*
+     * 如果此次调用发生异常，则可以通过下面三个方法获取
      */
+
     Throwable getException();
 
     void setException(Throwable t);
 
-    /**
-     * Has exception.
-     *
-     * @return has exception.
-     */
     boolean hasException();
 
     /**
-     * Recreate.
+     * recreate() 方法是一个复合操作，如果此次调用发生异常，则直接抛出异常，如果没有异常，则返回结果。
      * <p>
      * <code>
      * if (hasException()) {
@@ -148,9 +144,7 @@ public interface Result extends Serializable {
     Object getObjectAttachment(String key);
 
     /**
-     * get attachment by key with default value.
-     *
-     * @return attachment value.
+     * Result中同样可以携带附加信息
      */
     String getAttachment(String key, String defaultValue);
 
@@ -171,13 +165,10 @@ public interface Result extends Serializable {
     void setObjectAttachment(String key, Object value);
 
     /**
-     * Add a callback which can be triggered when the RPC call finishes.
+     * 添加一个回调，当 RPC 调用完成时，会触发这里添加的回调。
      * <p>
      * Just as the method name implies, this method will guarantee the callback being triggered under the same context as when the call was started,
      * see implementation in {@link Result#whenCompleteWithContext(BiConsumer)}
-     *
-     * @param fn
-     * @return
      */
     Result whenCompleteWithContext(BiConsumer<Result, Throwable> fn);
 

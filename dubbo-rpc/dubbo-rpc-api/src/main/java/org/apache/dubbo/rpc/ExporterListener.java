@@ -20,26 +20,20 @@ import org.apache.dubbo.common.extension.ExtensionScope;
 import org.apache.dubbo.common.extension.SPI;
 
 /**
+ * 服务发布的过程中，我们可以添加一些 Listener 来监听相应的事件。
+ *
  * ExporterListener. (SPI, Singleton, ThreadSafe)
  */
 @SPI(scope = ExtensionScope.FRAMEWORK)
 public interface ExporterListener {
 
     /**
-     * The exporter exported.
-     *
-     * @param exporter
-     * @throws RpcException
-     * @see org.apache.dubbo.rpc.Protocol#export(Invoker)
+     * 当有服务发布的时候，会触发该方法
      */
     void exported(Exporter<?> exporter) throws RpcException;
 
     /**
-     * The exporter unexported.
-     *
-     * @param exporter
-     * @throws RpcException
-     * @see org.apache.dubbo.rpc.Exporter#unexport()
+     * 当有服务取消发布的时候，会触发该方法
      */
     void unexported(Exporter<?> exporter);
 

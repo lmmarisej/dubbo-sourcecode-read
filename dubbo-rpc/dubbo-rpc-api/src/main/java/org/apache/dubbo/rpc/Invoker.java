@@ -19,6 +19,15 @@ package org.apache.dubbo.rpc;
 import org.apache.dubbo.common.Node;
 
 /**
+ * Proxy 底层会通过 Invoker 完成网络调用。
+ *
+ * 调用 -> proxy -> invoker
+ *
+ * 一些实现了 Protocol 接口以及 Invoker 接口的抽象类位于 protocol 包之中，
+ * 它们主要是为 Protocol 接口的具体实现以及 Invoker 接口的具体实现提供一些公共逻辑。
+ * <p>
+ * Dubbo 中的很多设计思路都会向 Invoker 这个概念靠拢。
+ * <p>
  * Invoker. (API/SPI, Prototype, ThreadSafe)
  *
  * @see org.apache.dubbo.rpc.Protocol#refer(Class, org.apache.dubbo.common.URL)
@@ -28,14 +37,14 @@ import org.apache.dubbo.common.Node;
 public interface Invoker<T> extends Node {
 
     /**
-     * get service interface.
+     * 服务接口
      *
      * @return service interface.
      */
     Class<T> getInterface();
 
     /**
-     * invoke.
+     * 进行一次调用，也有人称之为一次"会话"，你可以理解为一次调用
      *
      * @param invocation
      * @return result

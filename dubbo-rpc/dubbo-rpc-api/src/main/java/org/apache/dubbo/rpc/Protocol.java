@@ -27,17 +27,19 @@ import java.util.List;
 /**
  * Protocol. (API/SPI, Singleton, ThreadSafe)
  */
-@SPI(value = "dubbo", scope = ExtensionScope.FRAMEWORK)
+@SPI(value = "dubbo", scope = ExtensionScope.FRAMEWORK)     // 默认使用 DubboProtocol 实现
 public interface Protocol {
 
     /**
-     * Get default port when user doesn't config the port.
-     *
-     * @return default port
+     *  默认端口
      */
     int getDefaultPort();
 
     /**
+     * 将一个 Invoker 暴露出去，export() 方法实现需要是幂等的，即同一个服务暴露多次和暴露一次的效果是相同的。
+     *
+     * 并不是简单地将 Invoker 对象包装成 Exporter 对象返回，其中还涉及代理对象的创建、底层 Server 的启动等操作；
+     *
      * Export service for remote invocation: <br>
      * 1. Protocol should record request source address after receive a request:
      * RpcContext.getServerAttachment().setRemoteAddress();<br>
@@ -54,6 +56,10 @@ public interface Protocol {
     <T> Exporter<T> export(Invoker<T> invoker) throws RpcException;
 
     /**
+     * 引用一个 Invoker，refer() 方法会根据参数返回一个Invoker对象， Consumer 端可以通过这个 Invoker 请求到 Provider 端的服务。
+     *
+     * 除了根据传入的 type 类型以及 URL 参数查询 Invoker 之外，还涉及相关 Client 的创建等操作。
+     *
      * Refer a remote service: <br>
      * 1. When user calls `invoke()` method of `Invoker` object which's returned from `refer()` call, the protocol
      * needs to correspondingly execute `invoke()` method of `Invoker` object <br>
@@ -72,6 +78,8 @@ public interface Protocol {
     <T> Invoker<T> refer(Class<T> type, URL url) throws RpcException;
 
     /**
+     * 销毁 export() 方法以及 refer() 方法使用到的 Invoker 对象，释放当前 Protocol 对象底层占用的资源
+     *
      * Destroy protocol: <br>
      * 1. Cancel all services this protocol exports and refers <br>
      * 2. Release all occupied resources, for example: connection, port, etc. <br>
@@ -81,8 +89,6 @@ public interface Protocol {
 
     /**
      * Get all servers serving this protocol
-     *
-     * @return
      */
     default List<ProtocolServer> getServers() {
         return Collections.emptyList();

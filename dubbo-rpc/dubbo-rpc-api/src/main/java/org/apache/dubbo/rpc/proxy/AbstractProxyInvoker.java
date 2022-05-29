@@ -38,6 +38,12 @@ import java.util.concurrent.CompletionException;
 import static org.apache.dubbo.common.constants.CommonConstants.PROVIDER_ASYNC_KEY;
 
 /**
+ * 业务接口实现会被包装成一个 AbstractProxyInvoker 对象，并新生成对应的 Exporter 实例，
+ * 然后由 Exporter 暴露出去，让 Consumer 可以调用到该服务。
+ *
+ *
+ * Protocol 层收到一个请求之后，会找到这个 Exporter 实例，并调用其对应的 AbstractProxyInvoker 实例，从而完成 Provider 逻辑的调用。
+ *
  * This Invoker works on provider side, delegates RPC to interface implementation.
  */
 public abstract class AbstractProxyInvoker<T> implements Invoker<T> {

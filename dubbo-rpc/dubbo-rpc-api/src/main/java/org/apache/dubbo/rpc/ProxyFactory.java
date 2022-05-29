@@ -24,37 +24,26 @@ import static org.apache.dubbo.common.extension.ExtensionScope.FRAMEWORK;
 import static org.apache.dubbo.rpc.Constants.PROXY_KEY;
 
 /**
+ * 创建代理对象的工厂，提供了创建代理的能力。
+ *
+ * proxy 个包中支持 JDK 动态代理以及 Javassist 字节码两种方式生成本地代理类。
+ *
  * ProxyFactory. (API/SPI, Singleton, ThreadSafe)
  */
 @SPI(value = "javassist", scope = FRAMEWORK)
 public interface ProxyFactory {
 
     /**
-     * create proxy.
-     *
-     * @param invoker
-     * @return proxy
+     * 为传入的 Invoker 对象创建代理对象
      */
     @Adaptive({PROXY_KEY})
     <T> T getProxy(Invoker<T> invoker) throws RpcException;
 
-    /**
-     * create proxy.
-     *
-     * @param invoker
-     * @return proxy
-     */
     @Adaptive({PROXY_KEY})
     <T> T getProxy(Invoker<T> invoker, boolean generic) throws RpcException;
 
     /**
-     * create invoker.
-     *
-     * @param <T>
-     * @param proxy
-     * @param type
-     * @param url
-     * @return invoker
+     * 将传入的代理对象封装成 Invoker 对象，可以暂时理解为 getProxy() 的逆操作。
      */
     @Adaptive({PROXY_KEY})
     <T> Invoker<T> getInvoker(T proxy, Class<T> type, URL url) throws RpcException;

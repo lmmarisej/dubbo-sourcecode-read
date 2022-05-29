@@ -18,6 +18,8 @@ package org.apache.dubbo.rpc;
 
 public interface BaseFilter {
     /**
+     * 将请求传递给后续的 Invoker 进行处理。
+     *
      * Always call invoker.invoke() in the implementation to hand over the request to the next filter node.
      */
     Result invoke(Invoker<?> invoker, Invocation invocation) throws RpcException;
@@ -29,7 +31,7 @@ public interface BaseFilter {
      * There's something that needs to pay attention on legacy synchronous style filer refactor, the thing is, try to move logics
      * previously defined in the 'finally block' to both onResponse and onError.
      */
-    interface Listener {
+    interface Listener {         // 用于监听响应以及异常
 
         /**
          * This method will only be called on successful remote rpc execution, that means, the service in on remote received
