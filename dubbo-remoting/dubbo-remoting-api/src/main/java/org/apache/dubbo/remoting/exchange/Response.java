@@ -19,7 +19,7 @@ package org.apache.dubbo.remoting.exchange;
 import static org.apache.dubbo.common.constants.CommonConstants.HEARTBEAT_EVENT;
 
 /**
- * Response
+ * 响应的抽象。
  */
 public class Response {
 
@@ -78,17 +78,17 @@ public class Response {
      */
     public static final byte SERVER_THREADPOOL_EXHAUSTED_ERROR = 100;
 
-    private long mId = 0;
+    private long mId = 0;         // 响应 ID，与相应请求的 ID 一致
 
-    private String mVersion;
+    private String mVersion;     // 当前协议的版本号，与请求消息的版本号一致
 
-    private byte mStatus = OK;
+    private byte mStatus = OK;  // 响应状态码，有OK、CLIENT_TIMEOUT、SERVER_TIMEOUT等10多个可选值
 
     private boolean mEvent = false;
 
-    private String mErrorMsg;
+    private String mErrorMsg;    // 可读的错误响应消息
 
-    private Object mResult;
+    private Object mResult;     // 响应体
 
     public Response() {
     }

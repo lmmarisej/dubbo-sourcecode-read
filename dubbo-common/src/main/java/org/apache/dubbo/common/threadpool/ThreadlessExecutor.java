@@ -145,9 +145,7 @@ public class ThreadlessExecutor extends AbstractExecutorService {
      */
     public void notifyReturn(Throwable t) {
         // an empty runnable task.
-        execute(() -> {
-            waitingFuture.completeExceptionally(t);
-        });
+        execute(() -> waitingFuture.completeExceptionally(t));
     }
 
     /**

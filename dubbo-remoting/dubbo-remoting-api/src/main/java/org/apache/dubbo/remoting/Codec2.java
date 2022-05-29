@@ -23,6 +23,9 @@ import org.apache.dubbo.remoting.buffer.ChannelBuffer;
 
 import java.io.IOException;
 
+/**
+ * Codec2 是对整个请求和响应的编解码。
+ */
 @SPI(scope = ExtensionScope.FRAMEWORK)
 public interface Codec2 {
 

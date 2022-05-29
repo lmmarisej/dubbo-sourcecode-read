@@ -51,7 +51,7 @@ import static org.apache.dubbo.remoting.utils.UrlUtils.getHeartbeat;
 import static org.apache.dubbo.remoting.utils.UrlUtils.getIdleTimeout;
 
 /**
- * ExchangeServerImpl
+ * 是 RemotingServer 的装饰器，实现自 RemotingServer 接口的大部分方法都委托给了所修饰的 RemotingServer 对象。
  */
 public class HeaderExchangeServer implements ExchangeServer {
 
@@ -60,10 +60,13 @@ public class HeaderExchangeServer implements ExchangeServer {
     private final RemotingServer server;
     private AtomicBoolean closed = new AtomicBoolean(false);
 
+    /**
+     * 启动一个 CloseTimerTask 定时任务，定期关闭长时间空闲的连接
+     */
     public static GlobalResourceInitializer<HashedWheelTimer> IDLE_CHECK_TIMER = new GlobalResourceInitializer<>(() ->
         new HashedWheelTimer(new NamedThreadFactory("dubbo-server-idleCheck", true), 1,
             TimeUnit.SECONDS, TICKS_PER_WHEEL),
-        timer -> timer.stop());
+        HashedWheelTimer::stop);
 
     private Timeout closeTimer;
 
@@ -109,7 +112,7 @@ public class HeaderExchangeServer implements ExchangeServer {
 
     @Override
     public void close(final int timeout) {
-        if (!closed.compareAndSet(false, true)) {
+        if (!closed.compareAndSet(false, true)) {       // 将底层RemotingServer的closing字段设置为true
             return;
         }
         startClose();
@@ -117,19 +120,19 @@ public class HeaderExchangeServer implements ExchangeServer {
             final long max = timeout;
             final long start = System.currentTimeMillis();
             if (getUrl().getParameter(Constants.CHANNEL_SEND_READONLYEVENT_KEY, true)) {
-                sendChannelReadOnlyEvent();
+                sendChannelReadOnlyEvent();      // 发送ReadOnly 事件请求通知客户端
             }
             while (HeaderExchangeServer.this.isRunning()
                     && System.currentTimeMillis() - start < max) {
                 try {
-                    Thread.sleep(10);
+                    Thread.sleep(10);       // 循环等待客户端断开连接
                 } catch (InterruptedException e) {
                     logger.warn(e.getMessage(), e);
                 }
             }
         }
-        doClose();
-        server.close(timeout);
+        doClose();                  // 将自身 closed 字段设置为 true，取消 CloseTimerTask 定时任务
+        server.close(timeout);      // 关闭 Transport 层的 Server
     }
 
     @Override
@@ -278,6 +281,7 @@ public class HeaderExchangeServer implements ExchangeServer {
             CloseTimerTask closeTimerTask = new CloseTimerTask(cp, idleTimeoutTick, idleTimeout);
 
             // init task and start timer.
+            // 启动一个 CloseTimerTask 定时任务，定期关闭长时间空闲的连接
             this.closeTimer = IDLE_CHECK_TIMER.get().newTimeout(closeTimerTask, idleTimeoutTick, TimeUnit.MILLISECONDS);
         }
     }

@@ -27,7 +27,7 @@ import org.apache.dubbo.remoting.exchange.Request;
 import org.apache.dubbo.remoting.exchange.Response;
 
 /**
- * 专门处理 Decodeable 的 ChannelHandler 实现。
+ * 对请求体和响应结果的解码。
  */
 public class DecodeHandler extends AbstractChannelHandlerDelegate {
 

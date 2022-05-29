@@ -23,12 +23,14 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 
 /**
+ * 在 Channel 接口之上抽象了 Exchange 层的网络连接，在 Channel 接口之上抽象了 Exchange 层的网络连接。
+ *
  * ExchangeChannel. (API/SPI, Prototype, ThreadSafe)
  */
 public interface ExchangeChannel extends Channel {
 
     /**
-     * send request.
+     * 发送请求
      *
      * @param request
      * @return response future

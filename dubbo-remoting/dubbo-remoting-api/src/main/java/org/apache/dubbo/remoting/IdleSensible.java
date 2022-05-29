@@ -23,6 +23,8 @@ package org.apache.dubbo.remoting;
  */
 public interface IdleSensible {
     /**
+     * true 该实现可以自己发送心跳请求
+     *
      * Whether the implementation can sense and handle the idle connection. By default, it's false, the implementation
      * relies on dedicated timer to take care of idle connection.
      *

@@ -180,7 +180,8 @@ public class HashedWheelTimer implements Timer {
      * @param threadFactory a {@link ThreadFactory} that creates a
      *                      background {@link Thread} which is dedicated to
      *                      {@link TimerTask} execution.
-     * @param tickDuration  the duration between tick
+     * @param tickDuration  时钟多长时间拨动一次，值越小，时间轮精度越高。
+     *                      每次处理完槽上链表中节点事件后，都检查是否到达下一个槽上对应的时间。超时则处理下一个槽，否则 sleep 剩余时间。
      * @param unit          the time unit of the {@code tickDuration}
      * @throws NullPointerException     if either of {@code threadFactory} and {@code unit} is {@code null}
      * @throws IllegalArgumentException if {@code tickDuration} is &lt;= 0

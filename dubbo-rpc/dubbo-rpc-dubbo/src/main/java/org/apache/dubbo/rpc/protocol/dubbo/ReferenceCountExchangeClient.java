@@ -168,9 +168,6 @@ final class ReferenceCountExchangeClient implements ExchangeClient {
 
     /**
      * when destroy unused invoker, closeAll should be true
-     *
-     * @param timeout
-     * @param closeAll
      */
     private void closeInternal(int timeout, boolean closeAll) {
         if (closeAll || referenceCount.decrementAndGet() <= 0) {

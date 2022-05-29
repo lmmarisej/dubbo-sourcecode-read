@@ -26,7 +26,7 @@ import org.apache.dubbo.remoting.exchange.Request;
 import static org.apache.dubbo.common.constants.CommonConstants.HEARTBEAT_EVENT;
 
 /**
- * HeartbeatTimerTask
+ * 心跳定时任务
  */
 public class HeartbeatTimerTask extends AbstractTimerTask {
 
@@ -39,14 +39,17 @@ public class HeartbeatTimerTask extends AbstractTimerTask {
         this.heartbeat = heartbeat;
     }
 
+    /**
+     * 读取最后一次读写时间，然后计算距离当前的时间，如果大于心跳间隔，就会发送一个心跳请求。
+     */
     @Override
     protected void doTask(Channel channel) {
         try {
-            Long lastRead = lastRead(channel);
+            Long lastRead = lastRead(channel);    // 获取最后一次读写时间
             Long lastWrite = lastWrite(channel);
             Long now = now();
             if ((lastRead != null && now - lastRead > heartbeat)
-                    || (lastWrite != null && now - lastWrite > heartbeat)) {
+                    || (lastWrite != null && now - lastWrite > heartbeat)) {  // 最后一次读写时间超过心跳时间，就会发送心跳请求
                 Request req = new Request();
                 req.setVersion(Version.getProtocolVersion());
                 req.setTwoWay(true);

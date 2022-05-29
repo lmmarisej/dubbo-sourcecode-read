@@ -23,23 +23,27 @@ import java.util.concurrent.atomic.AtomicLong;
 import static org.apache.dubbo.common.constants.CommonConstants.HEARTBEAT_EVENT;
 
 /**
- * Request.
+ * 对请求的抽象。
  */
 public class Request {
 
+    // 用于生成请求的自增ID，当递增到 Long.MAX_VALUE 之后，会溢出到 Long.MIN_VALUE，我们可以继续使用该负数作为消息 ID
     private static final AtomicLong INVOKE_ID = new AtomicLong(0);
 
-    private final long mId;
+    private final long mId;     // 请求的 ID
 
-    private String mVersion;
+    private String mVersion;    // 请求版本号
 
+    // 请求的双向标识，如果该字段设置为true，则 Server 端在收到请求后， 需要给 Client 返回一个响应
     private boolean mTwoWay = true;
 
-    private boolean mEvent = false;
+    private boolean mEvent = false;      // 事件标识，例如心跳请求、只读请求等，都会带有这个标识
 
+    // 请求发送到 Server 之后，由 Decoder 将二进制数据解码成 Request 对象，
+    // 如果解码环节遇到异常，则会设置该标识，然后交由其他 ChannelHandler 根据该标识做进一步处理
     private boolean mBroken = false;
 
-    private Object mData;
+    private Object mData;         // 请求体，可以是任何 Java 类型的对象，也可以是 null
 
     public Request() {
         mId = newId();

@@ -44,7 +44,7 @@ import java.io.IOException;
 import java.io.InputStream;
 
 /**
- * ExchangeCodec.
+ * 在 TelnetCodec 的基础之上，添加了处理协议头的能力。
  */
 public class ExchangeCodec extends TelnetCodec {
 
@@ -88,7 +88,7 @@ public class ExchangeCodec extends TelnetCodec {
     protected Object decode(Channel channel, ChannelBuffer buffer, int readable, byte[] header) throws IOException {
         // check magic number.
         if (readable > 0 && header[0] != MAGIC_HIGH
-                || readable > 1 && header[1] != MAGIC_LOW) {
+            || readable > 1 && header[1] != MAGIC_LOW) {
             int length = header.length;
             if (header.length < readable) {
                 header = Bytes.copyOf(header, readable);
@@ -221,34 +221,43 @@ public class ExchangeCodec extends TelnetCodec {
         return req.getData();
     }
 
+    /**
+     * 对 Request 对象进行编码。
+     */
     protected void encodeRequest(Channel channel, ChannelBuffer buffer, Request req) throws IOException {
-        Serialization serialization = getSerialization(channel, req);
+        Serialization serialization = getSerialization(channel, req);          // 根据选定的序列化方式对请求进行序列化
         // header.
-        byte[] header = new byte[HEADER_LENGTH];
+        byte[] header = new byte[HEADER_LENGTH];         // 该数组用来暂存协议头
         // set magic number.
-        Bytes.short2bytes(MAGIC, header);
+        Bytes.short2bytes(MAGIC, header);         // 在header数组的前两个字节中写入魔数
 
         // set request and serialization flag.
-        header[2] = (byte) (FLAG_REQUEST | serialization.getContentTypeId());
+        header[2] = (byte) (FLAG_REQUEST | serialization.getContentTypeId());        // 根据当前使用的序列化设置协议头中的序列化标志位
 
-        if (req.isTwoWay()) {
+        if (req.isTwoWay()) {                // 设置协议头中的2Way标志位
             header[2] |= FLAG_TWOWAY;
         }
-        if (req.isEvent()) {
+        if (req.isEvent()) {                 // 设置协议头中的Event标志位
             header[2] |= FLAG_EVENT;
         }
 
         // set request id.
-        Bytes.long2bytes(req.getId(), header, 4);
+        Bytes.long2bytes(req.getId(), header, 4);        // 将请求ID记录到请求头中
 
-        // encode request data.
-        int savedWriteIndex = buffer.writerIndex();
-        buffer.writerIndex(savedWriteIndex + HEADER_LENGTH);
+        /*
+         * encode request data.
+         */
+
+        int savedWriteIndex = buffer.writerIndex();     // 记录写指针到栈
+
+        // 下面开始序列化请求，并统计序列化后的字节数
+
+        buffer.writerIndex(savedWriteIndex + HEADER_LENGTH);        // 将 buffer 的写指针移动一个头的长度
         ChannelBufferOutputStream bos = new ChannelBufferOutputStream(buffer);
 
         if (req.isHeartbeat()) {
             // heartbeat request data is always null
-            bos.write(CodecSupport.getNullBytesOf(serialization));
+            bos.write(CodecSupport.getNullBytesOf(serialization));      // 心跳请求不需要报文体，空写
         } else {
             ObjectOutput out = serialization.serialize(channel.getUrl(), bos);
             if (req.isEvent()) {
@@ -262,15 +271,16 @@ public class ExchangeCodec extends TelnetCodec {
             }
         }
 
-        bos.flush();
+        bos.flush();              // buffer 将从 header 指针位置写 body
         bos.close();
-        int len = bos.writtenBytes();
+        int len = bos.writtenBytes();       // 统计请求序列化之后，得到的 body 字节数
         checkPayload(channel, len);
         Bytes.int2bytes(len, header, 12);
 
         // write
-        buffer.writerIndex(savedWriteIndex);
-        buffer.writeBytes(header); // write header.
+        buffer.writerIndex(savedWriteIndex);           // buffer 写指针复位到函数开始时位置
+        buffer.writeBytes(header); // write header.    // 写头
+        // 因为 body 以及在前面写完了，这里只需将指针移动到正确的位置
         buffer.writerIndex(savedWriteIndex + HEADER_LENGTH + len);
     }
 
@@ -298,10 +308,10 @@ public class ExchangeCodec extends TelnetCodec {
 
             // encode response data or error message.
             if (status == Response.OK) {
-                if(res.isHeartbeat()){
+                if (res.isHeartbeat()) {
                     // heartbeat response data is always null
                     bos.write(CodecSupport.getNullBytesOf(serialization));
-                }else {
+                } else {
                     ObjectOutput out = serialization.serialize(channel.getUrl(), bos);
                     if (res.isEvent()) {
                         encodeEventData(channel, out, res.getResult());

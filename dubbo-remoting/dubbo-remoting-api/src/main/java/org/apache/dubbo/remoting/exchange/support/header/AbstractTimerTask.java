@@ -26,7 +26,7 @@ import java.util.Collection;
 import java.util.concurrent.TimeUnit;
 
 /**
- * AbstractTimerTask
+ * 实现了 TimerTask 接口的 run() 方法
  */
 public abstract class AbstractTimerTask implements TimerTask {
 
@@ -79,19 +79,22 @@ public abstract class AbstractTimerTask implements TimerTask {
 
     @Override
     public void run(Timeout timeout) throws Exception {
-        Collection<Channel> c = channelProvider.getChannels();
+        Collection<Channel> c = channelProvider.getChannels();      // 获取此次任务相关的 Channel 集合
         for (Channel channel : c) {
-            if (channel.isClosed()) {
-                continue;
+            if (channel.isClosed()) {       // 检测 Channel 状态
+                continue;       // 抛弃
             }
-            doTask(channel);
+            doTask(channel);         // 执行任务
         }
-        reput(timeout, tick);
+        reput(timeout, tick);       // 将当前任务重新加入时间轮中，等待执行
     }
 
+    /**
+     * 不同的定时任务执行不同的操作
+     */
     protected abstract void doTask(Channel channel);
 
     interface ChannelProvider {
-        Collection<Channel> getChannels();
+        Collection<Channel> getChannels();      // 在 Client 端只有一个 Channel，在 Server 端有多个 Channel
     }
 }

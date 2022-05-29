@@ -36,19 +36,19 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 
-import static org.apache.dubbo.remoting.Constants.HEARTBEAT_CHECK_TICK;
-import static org.apache.dubbo.remoting.Constants.LEAST_HEARTBEAT_DURATION;
-import static org.apache.dubbo.remoting.Constants.TICKS_PER_WHEEL;
+import static org.apache.dubbo.remoting.Constants.*;
 import static org.apache.dubbo.remoting.utils.UrlUtils.getHeartbeat;
 import static org.apache.dubbo.remoting.utils.UrlUtils.getIdleTimeout;
 
 /**
- * DefaultMessageClient
+ * 是 Client 装饰器，主要为其装饰的 Client 添加两个功能：
+ * 1.维持与 Server 的长连状态，这是通过定时发送心跳消息实现的；
+ * 2.在因故障掉线之后，进行重连，这是通过定时检查连接状态实现的。
  */
 public class HeaderExchangeClient implements ExchangeClient {
 
-    private final Client client;
-    private final ExchangeChannel channel;
+    private final Client client;                // HeaderExchangeClient 装饰 Client
+    private final ExchangeChannel channel;      // 与服务端建立的连接，HeaderExchangeClient 装饰 Channel
 
     public static GlobalResourceInitializer<HashedWheelTimer> IDLE_CHECK_TIMER = new GlobalResourceInitializer<>(() ->
         new HashedWheelTimer(new NamedThreadFactory("dubbo-client-idleCheck", true), 1,
@@ -58,6 +58,10 @@ public class HeaderExchangeClient implements ExchangeClient {
     private Timeout reconnectTimer;
     private Timeout heartBeatTimer;
 
+    /**
+     * @param client     封装 Transport 层的 Client 对象。
+     * @param startTimer 控制是否开启心跳定时任务和重连定时任务。
+     */
     public HeaderExchangeClient(Client client, boolean startTimer) {
         Assert.notNull(client, "Client can't be null");
         this.client = client;
@@ -141,10 +145,17 @@ public class HeaderExchangeClient implements ExchangeClient {
         channel.close();
     }
 
+    /**
+     * 如果当前 Channel 上还有请求未收到响应，会循环等待至收到响应。
+     * 如果超时未收到响应，会自己创建一个状态码将连接关闭的 Response 交给 DefaultFuture 处理，与收到 disconnected 事件相同。
+     * <p>
+     * 然后会关闭 Transport 层的 Channel，以 NettyChannel 为例，NettyChannel.close() 方法会先将自身的 closed 字段设置为 true，
+     * 清理 CHANNEL_MAP 缓存中的记录，以及 Channel 的附加属性，最后才是关闭 io.netty.channel.Channel。
+     */
     @Override
     public void close(int timeout) {
         // Mark the client into the closure process
-        startClose();
+        startClose();       // 会将自身的 closed 字段设置为 true，这样就不会继续发送请求。
         doClose();
         channel.close(timeout);
     }
@@ -191,22 +202,28 @@ public class HeaderExchangeClient implements ExchangeClient {
         return channel.hasAttribute(key);
     }
 
+    /**
+     * 启动心跳定时任务。
+     */
     private void startHeartBeatTask(URL url) {
-        if (!client.canHandleIdle()) {
+        if (!client.canHandleIdle()) {              // Client 的具体实现决定是否启动该心跳任务
             AbstractTimerTask.ChannelProvider cp = () -> Collections.singletonList(HeaderExchangeClient.this);
-            int heartbeat = getHeartbeat(url);
+            int heartbeat = getHeartbeat(url);      // 计算心跳间隔，最小间隔不能低于 1s
             long heartbeatTick = calculateLeastDuration(heartbeat);
+            // 创建心跳任务
             HeartbeatTimerTask heartBeatTimerTask = new HeartbeatTimerTask(cp, heartbeatTick, heartbeat);
+            // 提交到IDLE_CHECK_TIMER这个时间轮中等待执行
             heartBeatTimer = IDLE_CHECK_TIMER.get().newTimeout(heartBeatTimerTask, heartbeatTick, TimeUnit.MILLISECONDS);
         }
     }
 
     private void startReconnectTask(URL url) {
-        if (shouldReconnect(url)) {
+        if (shouldReconnect(url)) {     // 会根据 URL 中的参数决定是否启动任务。
             AbstractTimerTask.ChannelProvider cp = () -> Collections.singletonList(HeaderExchangeClient.this);
             int idleTimeout = getIdleTimeout(url);
             long heartbeatTimeoutTick = calculateLeastDuration(idleTimeout);
             ReconnectTimerTask reconnectTimerTask = new ReconnectTimerTask(cp, heartbeatTimeoutTick, idleTimeout);
+            // 重连定时任务最终也是提交到 IDLE_CHECK_TIMER 这个时间轮中
             reconnectTimer = IDLE_CHECK_TIMER.get().newTimeout(reconnectTimerTask, heartbeatTimeoutTick, TimeUnit.MILLISECONDS);
         }
     }

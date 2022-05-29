@@ -36,6 +36,13 @@ public class HeartbeatHandler extends AbstractChannelHandlerDelegate {
 
     private static final Logger logger = LoggerFactory.getLogger(HeartbeatHandler.class);
 
+    /**
+     * Transport 层的一个 ChannelHandler 的装饰器，
+     * 在其 connected() 、sent() 方法中会记录最后一次写操作时间，
+     * 在其 connected()、received() 方法中会记录最后一次读操作时间，
+     * 在其 disconnected() 方法中会清理这两个时间戳。
+     */
+
     public static final String KEY_READ_TIMESTAMP = "READ_TIMESTAMP";
 
     public static final String KEY_WRITE_TIMESTAMP = "WRITE_TIMESTAMP";

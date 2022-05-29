@@ -35,7 +35,7 @@ import java.net.InetSocketAddress;
 import static org.apache.dubbo.common.constants.CommonConstants.SIDE_KEY;
 
 /**
- * AbstractCodec
+ * 提供了几个给子类用的基础方法
  */
 public abstract class AbstractCodec implements Codec2, ScopeModelAware {
 
@@ -56,7 +56,7 @@ public abstract class AbstractCodec implements Codec2, ScopeModelAware {
         boolean overPayload = isOverPayload(payload, size);
         if (overPayload) {
             ExceedPayloadLimitException e = new ExceedPayloadLimitException(
-                    "Data length too large: " + size + ", max payload: " + payload + ", channel: " + channel);
+                "Data length too large: " + size + ", max payload: " + payload + ", channel: " + channel);
             logger.error(e);
             throw e;
         }
@@ -70,15 +70,13 @@ public abstract class AbstractCodec implements Codec2, ScopeModelAware {
         return payload;
     }
 
+    // 检查编解码数据的长度，如果数据超长，会抛出异常。
     protected static boolean isOverPayload(int payload, long size) {
-        if (payload > 0 && size > payload) {
-            return true;
-        }
-        return false;
+        return payload > 0 && size > payload;
     }
 
     protected Serialization getSerialization(Channel channel, Request req) {
-        return CodecSupport.getSerialization(channel.getUrl());
+        return CodecSupport.getSerialization(channel.getUrl());     // 通过 SPI 获取当前使用的序列化方式。
     }
 
     protected Serialization getSerialization(Channel channel, Response res) {
@@ -88,6 +86,10 @@ public abstract class AbstractCodec implements Codec2, ScopeModelAware {
     protected Serialization getSerialization(Channel channel) {
         return CodecSupport.getSerialization(channel.getUrl());
     }
+
+    /*
+     * 判断当前是 Client 端还是 Server 端。
+     */
 
     protected boolean isClientSide(Channel channel) {
         String side = (String) channel.getAttribute(SIDE_KEY);
