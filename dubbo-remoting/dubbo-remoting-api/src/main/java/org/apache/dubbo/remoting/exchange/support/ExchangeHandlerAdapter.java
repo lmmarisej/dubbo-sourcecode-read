@@ -24,7 +24,7 @@ import org.apache.dubbo.remoting.telnet.support.TelnetHandlerAdapter;
 import java.util.concurrent.CompletableFuture;
 
 /**
- * ExchangeHandlerAdapter
+ * 实现了 ExchangeHandler 接口，其核心是 reply() 方法
  */
 public abstract class ExchangeHandlerAdapter extends TelnetHandlerAdapter implements ExchangeHandler {
 

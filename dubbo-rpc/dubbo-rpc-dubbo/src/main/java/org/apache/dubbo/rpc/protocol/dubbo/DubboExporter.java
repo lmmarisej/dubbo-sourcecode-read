@@ -23,13 +23,13 @@ import org.apache.dubbo.rpc.protocol.AbstractExporter;
 import java.util.Map;
 
 /**
- * DubboExporter
+ * 维护了一个 Invoker 对象
  */
 public class DubboExporter<T> extends AbstractExporter<T> {
 
     private final String key;
 
-    private final Map<String, Exporter<?>> exporterMap;
+    private final Map<String, Exporter<?>> exporterMap; // 会维护底层 Invoker 对应的 ServiceKey 以及 DubboProtocol 中的 exportMap 集合
 
     public DubboExporter(Invoker<T> invoker, String key, Map<String, Exporter<?>> exporterMap) {
         super(invoker);
@@ -38,6 +38,9 @@ public class DubboExporter<T> extends AbstractExporter<T> {
         exporterMap.put(key, this);
     }
 
+    /**
+     * 清理该 DubboExporter 实例在 exportMap 中相应的元素。
+     */
     @Override
     public void afterUnExport() {
         exporterMap.remove(key);

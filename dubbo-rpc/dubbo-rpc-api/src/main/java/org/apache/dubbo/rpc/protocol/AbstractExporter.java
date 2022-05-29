@@ -22,7 +22,7 @@ import org.apache.dubbo.rpc.Exporter;
 import org.apache.dubbo.rpc.Invoker;
 
 /**
- * AbstractExporter.
+ * 维护了一个 Invoker 对象，以及一个 unexported 字段（boolean 类型）
  */
 public abstract class AbstractExporter<T> implements Exporter<T> {
 
@@ -51,13 +51,13 @@ public abstract class AbstractExporter<T> implements Exporter<T> {
     }
 
     @Override
-    final public void unexport() {
+    final public void unexport() {      // 销毁。
         if (unexported) {
             return;
         }
         unexported = true;
         getInvoker().destroy();
-        afterUnExport();
+        afterUnExport();            // 子类回调
     }
 
     /**

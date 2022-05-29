@@ -56,6 +56,9 @@ import static org.apache.dubbo.common.constants.CommonConstants.VERSION_KEY;
 import static org.apache.dubbo.rpc.Constants.SERIALIZATION_ID_KEY;
 import static org.apache.dubbo.rpc.Constants.SERIALIZATION_SECURITY_CHECK_KEY;
 
+/**
+ * 用来支持解码的，其实现的 decode() 方法正好是 DubboCodec.encodeRequestData() 方法对应的解码操作
+ */
 public class DecodeableRpcInvocation extends RpcInvocation implements Codec, Decodeable {
 
     private static final Logger log = LoggerFactory.getLogger(DecodeableRpcInvocation.class);
@@ -68,7 +71,8 @@ public class DecodeableRpcInvocation extends RpcInvocation implements Codec, Dec
 
     private Request request;
 
-    private volatile boolean hasDecoded;
+    // 可以根据 DECODE_IN_IO_THREAD_KEY 参数决定执行解码操作的线程了。
+    private volatile boolean hasDecoded;        // 判断当前是否已经完成解码
 
     protected final FrameworkModel frameworkModel;
 

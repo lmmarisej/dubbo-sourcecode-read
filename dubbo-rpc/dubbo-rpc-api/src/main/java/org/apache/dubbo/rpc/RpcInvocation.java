@@ -46,7 +46,7 @@ import static org.apache.dubbo.common.constants.CommonConstants.VERSION_KEY;
 import static org.apache.dubbo.rpc.Constants.TOKEN_KEY;
 
 /**
- * RPC Invocation.
+ * 通过读写字段即可实现 Invocation 接口的全部方法。
  *
  * @serial Don't change the class name and properties.
  */
@@ -54,38 +54,40 @@ public class RpcInvocation implements Invocation, Serializable {
 
     private static final long serialVersionUID = -4355285085441097045L;
 
-    private String targetServiceUniqueName;
+    private String targetServiceUniqueName;  // 要调用的唯一服务名称，其实就是 ServiceKey，即 interface/group:version 三部分构成的字符串。
     private String protocolServiceKey;
 
     private ServiceModel serviceModel;
 
-    private String methodName;
+    private String methodName;      // 调用的目标方法名称。
 
-    private String interfaceName;
+    private String interfaceName;       // 调用的目标服务接口名
 
     private transient Class<?>[] parameterTypes;
-    private String parameterTypesDesc;
+    private String parameterTypesDesc;      // 参数列表签名。
     private String[] compatibleParamSignatures;
 
-    private Object[] arguments;
+    private Object[] arguments;     // 具体参数值。
 
     /**
      * Passed to the remote server during RPC call
      */
-    private Map<String, Object> attachments;
+    private Map<String, Object> attachments;        // 此次调用的附加信息，可以被序列化到请求中。
 
     /**
+     * 此次调用的属性信息，这些信息不能被发送出去。
+     *
      * Only used on the caller side, will not appear on the wire.
      */
     private transient Map<Object, Object> attributes = Collections.synchronizedMap(new HashMap<>());
 
     private transient Invoker<?> invoker;
 
-    private transient Class<?> returnType;
+    private transient Class<?> returnType;      // 返回值的类型。
 
     private transient Type[] returnTypes;
 
-    private transient InvokeMode invokeMode;
+    private transient InvokeMode invokeMode;        // 此次调用的模式，分为 SYNC、ASYNC 和 FUTURE 三类。
 
     /**
      * @deprecated only for test

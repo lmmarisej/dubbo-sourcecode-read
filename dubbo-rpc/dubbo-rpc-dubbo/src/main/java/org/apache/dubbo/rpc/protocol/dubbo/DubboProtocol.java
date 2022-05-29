@@ -89,7 +89,7 @@ import static org.apache.dubbo.rpc.protocol.dubbo.Constants.SHARE_CONNECTIONS_KE
 
 
 /**
- *
+ * Dubbo 默认使用的 Protocol 实现类 —— DubboProtocol 实现。
  */
 public class DubboProtocol extends AbstractProtocol {
 
@@ -108,8 +108,14 @@ public class DubboProtocol extends AbstractProtocol {
 
     private AtomicBoolean destroyed = new AtomicBoolean();
 
+    /**
+     * 实现了 ExchangeHandlerAdapter 抽象类的匿名内部类的实例，间接实现了 ExchangeHandler 接口，其核心是 reply() 方法
+     */
     private ExchangeHandler requestHandler = new ExchangeHandlerAdapter() {
 
+        /**
+         * 完成真正的业务调用。
+         */
         @Override
         public CompletableFuture<Object> reply(ExchangeChannel channel, Object message) throws RemotingException {
 
@@ -120,12 +126,13 @@ public class DubboProtocol extends AbstractProtocol {
             }
 
             Invocation inv = (Invocation) message;
-            Invoker<?> invoker = getInvoker(channel, inv);
+            Invoker<?> invoker = getInvoker(channel, inv);          // 获取此次调用 Invoker 对象
             inv.setServiceModel(invoker.getUrl().getServiceModel());
-            // switch TCCL
+            // TCC L
             if (invoker.getUrl().getServiceModel() != null) {
                 Thread.currentThread().setContextClassLoader(invoker.getUrl().getServiceModel().getClassLoader());
             }
+            // 针对客户端回调的内容
             // need to consider backward-compatibility if it's a callback
             if (Boolean.TRUE.toString().equals(inv.getObjectAttachments().get(IS_CALLBACK_SERVICE_INVOKE))) {
                 String methodsStr = invoker.getUrl().getParameters().get("methods");
@@ -149,9 +156,10 @@ public class DubboProtocol extends AbstractProtocol {
                     return null;
                 }
             }
+            // 将客户端的地址记录到RpcContext中
             RpcContext.getServiceContext().setRemoteAddress(channel.getRemoteAddress());
-            Result result = invoker.invoke(inv);
-            return result.thenApply(Function.identity());
+            Result result = invoker.invoke(inv);        // 执行真正的调用
+            return result.thenApply(Function.identity());       // 转 CompletableFuture
         }
 
         @Override
@@ -261,6 +269,9 @@ public class DubboProtocol extends AbstractProtocol {
                         .equals(NetUtils.filterLocalHost(address.getAddress().getHostAddress()));
     }
 
+    /**
+     * 构造 Invoker。
+     */
     Invoker<?> getInvoker(Channel channel, Invocation inv) throws RemotingException {
         boolean isCallBackServiceInvoke;
         boolean isStubServiceInvoke;
@@ -281,7 +292,7 @@ public class DubboProtocol extends AbstractProtocol {
             inv.getObjectAttachments().put(IS_CALLBACK_SERVICE_INVOKE, Boolean.TRUE.toString());
         }
 
-        String serviceKey = serviceKey(
+        String serviceKey = serviceKey(     // 省略对客户端 Callback 以及 stub 的处理逻辑
                 port,
                 path,
                 (String) inv.getObjectAttachments().get(VERSION_KEY),
@@ -294,7 +305,7 @@ public class DubboProtocol extends AbstractProtocol {
                     ", channel: consumer: " + channel.getRemoteAddress() + " --> provider: " + channel.getLocalAddress() + ", message:" + getInvocationWithoutData(inv));
         }
 
-        return exporter.getInvoker();
+        return exporter.getInvoker();        // 获取exporter中获取Invoker对象
     }
 
     public Collection<Invoker<?>> getInvokers() {
@@ -312,7 +323,8 @@ public class DubboProtocol extends AbstractProtocol {
         URL url = invoker.getUrl();
 
         // export service.
-        String key = serviceKey(url);
+        String key = serviceKey(url);         // 创建ServiceKey
+        // 将上层传入的 Invoker 对象封装成 DubboExporter 对象，然后记录到 exporterMap 集合中
         DubboExporter<T> exporter = new DubboExporter<T>(invoker, key, exporterMap);
 
         //export a stub service for dispatching event
@@ -329,32 +341,35 @@ public class DubboProtocol extends AbstractProtocol {
             }
         }
 
-        openServer(url);
-        optimizeSerialization(url);
+        openServer(url);         // 启动 ProtocolServer
+        optimizeSerialization(url);         //  对指定的序列化算法进行优化。
 
         return exporter;
     }
 
+    /**
+     * 一路调用前面介绍的 Exchange 层、Transport 层，并最终创建 NettyServer 来接收客户端的请求。
+     */
     private void openServer(URL url) {
         checkDestroyed();
         // find server.
-        String key = url.getAddress();
+        String key = url.getAddress();       // 获取 host:port 这个地址
         // client can export a service which only for server to invoke
         boolean isServer = url.getParameter(IS_SERVER_KEY, true);
-        if (isServer) {
+        if (isServer) {      // 只有 Server 端才能启动 Server 对象
             ProtocolServer server = serverMap.get(key);
             if (server == null) {
-                synchronized (this) {
+                synchronized (this) {        // DoubleCheck，防止并发问题
                     server = serverMap.get(key);
-                    if (server == null) {
-                        serverMap.put(key, createServer(url));
+                    if (server == null) {                           // 无 ProtocolServer 监听该地址
+                        serverMap.put(key, createServer(url));    // 调用 createServer() 方法创建ProtocolServer对象
                     }else {
                         server.reset(url);
                     }
                 }
             } else {
                 // server supports reset, use together with override
-                server.reset(url);
+                server.reset(url);     // 如果已有 ProtocolServer 实例，则尝试根据 URL 信息重置 ProtocolServer
             }
         }
     }
@@ -368,11 +383,13 @@ public class DubboProtocol extends AbstractProtocol {
     private ProtocolServer createServer(URL url) {
         url = URLBuilder.from(url)
                 // send readonly event when server closes, it's enabled by default
-                .addParameterIfAbsent(CHANNEL_READONLYEVENT_SENT_KEY, Boolean.TRUE.toString())
+                .addParameterIfAbsent(CHANNEL_READONLYEVENT_SENT_KEY, Boolean.TRUE.toString())  // true: ReadOnly 请求需要阻塞等待响应返回。
                 // enable heartbeat by default
-                .addParameterIfAbsent(HEARTBEAT_KEY, String.valueOf(DEFAULT_HEARTBEAT))
-                .addParameter(CODEC_KEY, DubboCodec.NAME)
+                .addParameterIfAbsent(HEARTBEAT_KEY, String.valueOf(DEFAULT_HEARTBEAT))         // 默认的心跳时间间隔为 60 秒。
+                .addParameter(CODEC_KEY, DubboCodec.NAME)       // 获取该 URL 中的 CODEC_KEY 参数值。
                 .build();
+
+        // 检测 SERVER_KEY 参数指定的扩展实现名称是否合法，默认值为 netty。
         String str = url.getParameter(SERVER_KEY, DEFAULT_REMOTING_SERVER);
 
         if (StringUtils.isNotEmpty(str) && !url.getOrDefaultFrameworkModel().getExtensionLoader(Transporter.class).hasExtension(str)) {
@@ -381,7 +398,7 @@ public class DubboProtocol extends AbstractProtocol {
 
         ExchangeServer server;
         try {
-            server = Exchangers.bind(url, requestHandler);
+            server = Exchangers.bind(url, requestHandler);      // 通过 Exchangers 门面类，创建 ExchangeServer 对象
         } catch (RemotingException e) {
             throw new RpcException("Fail to start server(url: " + url + ") " + e.getMessage(), e);
         }
@@ -394,12 +411,13 @@ public class DubboProtocol extends AbstractProtocol {
             }
         }
 
-        DubboProtocolServer protocolServer = new DubboProtocolServer(server);
+        DubboProtocolServer protocolServer = new DubboProtocolServer(server);   // 将 ExchangeServer 封装成 DubboProtocolServer 返回
         loadServerProperties(protocolServer);
         return protocolServer;
     }
 
     private void optimizeSerialization(URL url) throws RpcException {
+        // 根据 URL 中的 optimizer 参数值，确定 SerializationOptimizer 接口的实现类
         String className = url.getParameter(OPTIMIZER_KEY, "");
         if (StringUtils.isEmpty(className) || optimizers.contains(className)) {
             return;
@@ -413,17 +431,19 @@ public class DubboProtocol extends AbstractProtocol {
                 throw new RpcException("The serialization optimizer " + className + " isn't an instance of " + SerializationOptimizer.class.getName());
             }
 
+            // 创建SerializationOptimizer实现类的对象
             SerializationOptimizer optimizer = (SerializationOptimizer) clazz.newInstance();
 
             if (optimizer.getSerializableClasses() == null) {
                 return;
             }
 
-            for (Class c : optimizer.getSerializableClasses()) {
+            for (Class c : optimizer.getSerializableClasses()) {     // 方法获取需要注册的类
+                // 将待优化的类写入该集合中暂存，在使用 Kryo、FST 等序列化算法时，会读取该集合中的类，完成注册操作
                 SerializableClassRegistry.registerClass(c);
             }
 
-            optimizers.add(className);
+            optimizers.add(className);     // 添加需要被序列化的类
 
         } catch (ClassNotFoundException e) {
             throw new RpcException("Cannot find the serialization optimizer class: " + className, e);

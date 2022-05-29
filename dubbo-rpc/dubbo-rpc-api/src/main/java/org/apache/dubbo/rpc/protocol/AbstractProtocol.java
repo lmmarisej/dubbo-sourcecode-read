@@ -43,21 +43,21 @@ import static org.apache.dubbo.common.constants.CommonConstants.DEFAULT_SERVER_S
 import static org.apache.dubbo.common.constants.CommonConstants.SHUTDOWN_WAIT_KEY;
 
 /**
- * abstract ProtocolSupport.
+ * 供了一些 Protocol 实现需要的公共能力以及公共字段
  */
 public abstract class AbstractProtocol implements Protocol, ScopeModelAware {
 
     protected final Logger logger = LoggerFactory.getLogger(getClass());
 
-    protected final Map<String, Exporter<?>> exporterMap = new ConcurrentHashMap<>();
+    protected final Map<String, Exporter<?>> exporterMap = new ConcurrentHashMap<>();       // 用于存储出去的服务集合
 
     /**
      * <host:port, ProtocolServer>
      */
-    protected final Map<String, ProtocolServer> serverMap = new ConcurrentHashMap<>();
+    protected final Map<String, ProtocolServer> serverMap = new ConcurrentHashMap<>();      // 记录了全部的 ProtocolServer 实例
 
     // TODO SoftReference
-    protected final Set<Invoker<?>> invokers = new ConcurrentHashSet<>();
+    protected final Set<Invoker<?>> invokers = new ConcurrentHashSet<>();       // 服务引用的集合。
 
     protected FrameworkModel frameworkModel;
 
@@ -92,7 +92,7 @@ public abstract class AbstractProtocol implements Protocol, ScopeModelAware {
 
     @Override
     public void destroy() {
-        for (Invoker<?> invoker : invokers) {
+        for (Invoker<?> invoker : invokers) {       // 遍历 Invokers 集合，销毁全部的服务引用
             if (invoker != null) {
                 try {
                     if (logger.isInfoEnabled()) {
@@ -106,7 +106,7 @@ public abstract class AbstractProtocol implements Protocol, ScopeModelAware {
         }
         invokers.clear();
 
-        exporterMap.forEach((key, exporter)-> {
+        exporterMap.forEach((key, exporter)-> {     // 遍历全部的 exporterMap 集合，销毁发布出去的服务
             if (exporter != null) {
                 try {
                     if (logger.isInfoEnabled()) {

@@ -20,6 +20,8 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
+ * 对需要优化的序列化 Class 的注册。
+ *
  * Provide a unified serialization registry, this class used for {@code dubbo-serialization-fst}
  * and {@code dubbo-serialization-kryo}, it will register some classes at startup time (for example {@link AbstractKryoFactory#create})
  */
@@ -38,10 +40,9 @@ public abstract class SerializableClassRegistry {
     }
 
     /**
-     * only supposed to be called at startup time
+     * 将待优化的类写入该集合中暂存，在使用 Kryo、FST 等序列化算法时，会读取该集合中的类，完成注册操作。
      *
-     * @param clazz object type
-     * @param serializer object serializer
+     * 即使不注册任何类进行优化，Kryo 和 FST 的性能依然普遍优于Hessian2 和 Dubbo 序列化。
      */
     public static void registerClass(Class<?> clazz, Object serializer) {
         if (clazz == null) {

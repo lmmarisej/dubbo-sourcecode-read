@@ -19,7 +19,7 @@ package org.apache.dubbo.rpc;
 import org.apache.dubbo.common.Node;
 
 /**
- * Proxy 底层会通过 Invoker 完成网络调用。
+ * 对调用的抽象。Proxy 底层会通过 Invoker 完成网络调用。
  *
  * 调用 -> proxy -> invoker
  *

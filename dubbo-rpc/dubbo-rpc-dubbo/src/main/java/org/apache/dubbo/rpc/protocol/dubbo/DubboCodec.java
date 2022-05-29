@@ -30,11 +30,13 @@ import org.apache.dubbo.remoting.exchange.Request;
 import org.apache.dubbo.remoting.exchange.Response;
 import org.apache.dubbo.remoting.exchange.codec.ExchangeCodec;
 import org.apache.dubbo.remoting.transport.CodecSupport;
+import org.apache.dubbo.remoting.transport.DecodeHandler;
 import org.apache.dubbo.rpc.AppResponse;
 import org.apache.dubbo.rpc.Invocation;
 import org.apache.dubbo.rpc.Result;
 import org.apache.dubbo.rpc.RpcInvocation;
 import org.apache.dubbo.rpc.model.FrameworkModel;
+import sun.rmi.transport.Transport;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -48,7 +50,7 @@ import static org.apache.dubbo.rpc.protocol.dubbo.Constants.DECODE_IN_IO_THREAD_
 import static org.apache.dubbo.rpc.protocol.dubbo.Constants.DEFAULT_DECODE_IN_IO_THREAD;
 
 /**
- * Dubbo codec.
+ * ExchangeCodec 只处理了 Dubbo 协议的请求头，而 DubboCodec 则是通过继承的方式，在 ExchangeCodec 基础之上，添加了解析 Dubbo 消息体的功能。
  */
 public class DubboCodec extends ExchangeCodec {
 
@@ -99,6 +101,7 @@ public class DubboCodec extends ExchangeCodec {
                         }
                     } else {
                         DecodeableRpcResult result;
+                        // 决定是否在 DubboCodec 中进行解码
                         if (channel.getUrl().getParameter(DECODE_IN_IO_THREAD_KEY, DEFAULT_DECODE_IN_IO_THREAD)) {
                             result = new DecodeableRpcResult(channel, res, is,
                                     (Invocation) getRequestData(id), proto);
@@ -144,16 +147,19 @@ public class DubboCodec extends ExchangeCodec {
                     }
                 } else {
                     DecodeableRpcInvocation inv;
+                    // 这里会检查 DECODE_IN_IO_THREAD_KEY 参数
                     if (channel.getUrl().getParameter(DECODE_IN_IO_THREAD_KEY, DEFAULT_DECODE_IN_IO_THREAD)) {
                         inv = new DecodeableRpcInvocation(frameworkModel, channel, req, is, proto);
-                        inv.decode();
+                        inv.decode();        // 直接调用 decode() 方法在当前 I/O 线程中解码
                     } else {
+                        // 这里只是读取数据，不会调用decode()方法在当前IO线程中进行解码
+                        // DecodeHandler（Transport 层），它的 received() 方法也是可以进行解码
                         inv = new DecodeableRpcInvocation(frameworkModel, channel, req,
                                 new UnsafeByteArrayInputStream(readMessageData(is)), proto);
                     }
                     data = inv;
                 }
-                req.setData(data);
+                req.setData(data);       // 设置到 Request 请求的 data 字段
             } catch (Throwable t) {
                 if (log.isWarnEnabled()) {
                     log.warn("Decode request failed: " + t.getMessage(), t);
@@ -188,26 +194,26 @@ public class DubboCodec extends ExchangeCodec {
 
     @Override
     protected void encodeRequestData(Channel channel, ObjectOutput out, Object data, String version) throws IOException {
-        RpcInvocation inv = (RpcInvocation) data;
+        RpcInvocation inv = (RpcInvocation) data;         // 请求体相关的内容，都封装在了 RpcInvocation
 
-        out.writeUTF(version);
+        out.writeUTF(version);       // 写入版本号
         // https://github.com/apache/dubbo/issues/6138
         String serviceName = inv.getAttachment(INTERFACE_KEY);
         if (serviceName == null) {
             serviceName = inv.getAttachment(PATH_KEY);
         }
-        out.writeUTF(serviceName);
-        out.writeUTF(inv.getAttachment(VERSION_KEY));
+        out.writeUTF(serviceName); // 写入服务名称
+        out.writeUTF(inv.getAttachment(VERSION_KEY));   // 写入Service版本号
 
-        out.writeUTF(inv.getMethodName());
-        out.writeUTF(inv.getParameterTypesDesc());
-        Object[] args = inv.getArguments();
+        out.writeUTF(inv.getMethodName());    // 写入方法名称
+        out.writeUTF(inv.getParameterTypesDesc());     // 写入参数类型列表
+        Object[] args = inv.getArguments();     // 依次写入全部参数
         if (args != null) {
             for (int i = 0; i < args.length; i++) {
                 out.writeObject(callbackServiceCodec.encodeInvocationArgument(channel, inv, i));
             }
         }
-        out.writeAttachments(inv.getObjectAttachments());
+        out.writeAttachments(inv.getObjectAttachments());      // 依次写入全部的附加信息
     }
 
     @Override
