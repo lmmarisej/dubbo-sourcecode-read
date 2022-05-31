@@ -51,7 +51,7 @@ public abstract class Wrapper {
     private static final Map<Class<?>, Wrapper> WRAPPER_MAP = new ConcurrentHashMap<Class<?>, Wrapper>(); //class wrapper map
     private static final String[] EMPTY_STRING_ARRAY = new String[0];
     private static final String[] OBJECT_METHODS = new String[]{"getClass", "hashCode", "toString", "equals"};
-    private static final Wrapper OBJECT_WRAPPER = new Wrapper() {
+    private static final Wrapper OBJECT_WRAPPER = new Wrapper() {       // 对 Object 对象的 Wrapper 处理的实现
         @Override
         public String[] getMethodNames() {
             return OBJECT_METHODS;
