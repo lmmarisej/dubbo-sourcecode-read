@@ -56,20 +56,20 @@ import static org.apache.dubbo.rpc.cluster.Constants.RUNTIME_KEY;
 import static org.apache.dubbo.rpc.cluster.Constants.TYPE_KEY;
 
 /**
- * ScriptRouter
+ * 支持 JDK 脚本引擎的所有脚本。
+ *
+ * 例如，JavaScript、JRuby、Groovy 等，通过 type=javascript 参数设置脚本类型，缺省为 javascript。
  */
 public class ScriptStateRouter<T> extends AbstractStateRouter<T> {
     public static final String NAME = "SCRIPT_ROUTER";
     private static final int SCRIPT_ROUTER_DEFAULT_PRIORITY = 0;
     private static final Logger logger = LoggerFactory.getLogger(ScriptStateRouter.class);
 
-    private static final Map<String, ScriptEngine> ENGINES = new ConcurrentHashMap<>();
+    private static final Map<String, ScriptEngine> ENGINES = new ConcurrentHashMap<>(); // 按照脚本语言的类型复用 ScriptEngine 对象。
 
-    private final ScriptEngine engine;
-
-    private final String rule;
-
-    private CompiledScript function;
+    private final ScriptEngine engine;      // 当前 ScriptRouter 使用的 ScriptEngine 对象。
+    private final String rule;              // 当前 ScriptRouter 使用的具体脚本内容。
+    private CompiledScript function;        // 根据 rule 这个具体脚本内容编译得到。
 
     private AccessControlContext accessControlContext;
 
@@ -86,11 +86,11 @@ public class ScriptStateRouter<T> extends AbstractStateRouter<T> {
         super(url);
         this.setUrl(url);
 
-        engine = getEngine(url);
-        rule = getRule(url);
+        engine = getEngine(url);            // 根据 URL 中的 type 参数值，从 ENGINES 集合中获取对应的 ScriptEngine 对象
+        rule = getRule(url);                // 获取 URL 中的 rule 参数值，即为具体的脚本
         try {
             Compilable compilable = (Compilable) engine;
-            function = compilable.compile(rule);
+            function = compilable.compile(rule);           // 编译 rule 字段中的脚本，得到 function 字段
         } catch (ScriptException e) {
             logger.error("route error, rule has been ignored. rule: " + rule +
                     ", url: " + RpcContext.getServiceContext().getUrl(), e);
@@ -131,7 +131,8 @@ public class ScriptStateRouter<T> extends AbstractStateRouter<T> {
             }
             return invokers;
         }
-        Bindings bindings = createBindings(invokers, invocation);
+        Bindings bindings = createBindings(invokers, invocation);       // 创建Bindings对象作为function函数的入参
+        // 调用function函数，并在getRoutedInvokers()方法中整理得到的Invoker集合
         return getRoutedInvokers(invokers, AccessController.doPrivileged((PrivilegedAction<Object>) () -> {
             try {
                 return function.eval(bindings);
@@ -165,6 +166,7 @@ public class ScriptStateRouter<T> extends AbstractStateRouter<T> {
     private Bindings createBindings(List<Invoker<T>> invokers, Invocation invocation) {
         Bindings bindings = engine.createBindings();
         // create a new List of invokers
+        // 与前面的javascript的示例脚本结合，我们可以看到这里在Bindings中为脚本中的route()函数提供了invokers、Invocation、context三个参数
         bindings.put("invokers", new ArrayList<>(invokers));
         bindings.put("invocation", invocation);
         bindings.put("context", RpcContext.getClientAttachment());

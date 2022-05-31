@@ -32,8 +32,9 @@ import org.apache.dubbo.rpc.model.ModuleModel;
  * @since 3.0
  */
 public abstract class AbstractStateRouter<T> implements StateRouter<T> {
+    // 当路由结果为空时，是否强制执行。如果不强制执行，则路由结果为空的路由规则将会自动失效；如果强制执行，则直接返回空的路由结果。
     private volatile boolean force = false;
-    private volatile URL url;
+    private volatile URL url;       // 路由规则的 URL，可以从 rule 参数中获取具体的路由规则。
     private volatile StateRouter<T> nextRouter = null;
 
     private final GovernanceRuleRepository ruleRepository;

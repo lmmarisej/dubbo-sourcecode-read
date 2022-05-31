@@ -422,6 +422,10 @@ public class UrlUtils {
             && (consumerClassifier == null || ANY_VALUE.equals(consumerClassifier) || StringUtils.isEquals(consumerClassifier, providerClassifier));
     }
 
+    /**
+     * 如果匹配条件以 "$" 符号开头，则从 URL 中获取相应的参数值进行匹配；
+     * 当遇到 "" 通配符的时候，会处理""通配符在匹配条件开头、中间以及末尾三种情况。
+     */
     public static boolean isMatchGlobPattern(String pattern, String value, URL param) {
         if (param != null && pattern.startsWith("$")) {
             pattern = param.getRawParameter(pattern.substring(1));

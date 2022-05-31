@@ -54,18 +54,18 @@ public class RouterChain<T> {
     /**
      * full list of addresses from registry, classified by method name.
      */
-    private volatile BitList<Invoker<T>> invokers = BitList.emptyList();
+    private volatile BitList<Invoker<T>> invokers = BitList.emptyList();        // 当前 RouterChain 对象要过滤的 Invoker 集合
 
     /**
      * containing all routers, reconstruct every time 'route://' urls change.
      */
-    private volatile List<Router> routers = Collections.emptyList();
+    private volatile List<Router> routers = Collections.emptyList();        // 当前 RouterChain 中真正要使用的 Router 集
 
     /**
      * Fixed router instances: ConfigConditionRouter, TagRouter, e.g.,
      * the rule for each instance may change but the instance will never delete or recreate.
      */
-    private volatile List<Router> builtinRouters = Collections.emptyList();
+    private volatile List<Router> builtinRouters = Collections.emptyList();     // 当前 RouterChain 激活的内置 Router 集合。
 
     private volatile StateRouter<T> headStateRouter;
 
@@ -81,12 +81,14 @@ public class RouterChain<T> {
     public static <T> RouterChain<T> buildChain(Class<T> interfaceClass, URL url) {
         ModuleModel moduleModel = url.getOrDefaultModuleModel();
 
+        // 通过ExtensionLoader加载激活的RouterFactory
         List<RouterFactory> extensionFactories = moduleModel.getExtensionLoader(RouterFactory.class)
             .getActivateExtension(url, ROUTER_KEY);
 
+        // 遍历所有RouterFactory，调用其getRouter()方法创建相应的Router对象
         List<Router> routers = extensionFactories.stream()
             .map(factory -> factory.getRouter(url))
-            .sorted(Router::compareTo)
+            .sorted(Router::compareTo)      // 这里会对routers集合进行排序
             .collect(Collectors.toList());
 
         List<StateRouter<T>> stateRouters = moduleModel
@@ -105,7 +107,7 @@ public class RouterChain<T> {
     }
 
     public RouterChain(List<Router> routers, List<StateRouter<T>> stateRouters, boolean shouldFailFast, RouterSnapshotSwitcher routerSnapshotSwitcher) {
-        initWithRouters(routers);
+        initWithRouters(routers);   // 初始化buildinRouters字段以及routers字段
 
         initWithStateRouters(stateRouters);
 
@@ -134,6 +136,8 @@ public class RouterChain<T> {
     }
 
     /**
+     * 通过 addRouter() 方法添加新的 Router 实例到 routers 字段中。
+     *
      * If we use route:// protocol in version before 2.7.0, each URL will generate a Router instance, so we should
      * keep the routers up to date, that is, each time router URLs changes, we should update the routers list, only
      * keep the builtinRouters which are available all the time and the latest notified routers which are generated
@@ -143,9 +147,9 @@ public class RouterChain<T> {
      */
     public void addRouters(List<Router> routers) {
         List<Router> newRouters = new LinkedList<>();
-        newRouters.addAll(builtinRouters);
-        newRouters.addAll(routers);
-        CollectionUtils.sort(newRouters);
+        newRouters.addAll(builtinRouters);      // 添加builtinRouters集合
+        newRouters.addAll(routers);             // 添加传入的Router集合
+        CollectionUtils.sort(newRouters);       // 重新排序
         this.routers = newRouters;
     }
 
@@ -186,7 +190,7 @@ public class RouterChain<T> {
         }
         List<Invoker<T>> commonRouterResult = resultInvokers.cloneToArrayList();
         // 2. route common router
-        for (Router router : routers) {
+        for (Router router : routers) {      // 遍历全部的 Router 对象
             // Copy resultInvokers to a arrayList. BitList not support
             RouterResult<Invoker<T>> routeResult = router.route(commonRouterResult, url, invocation, false);
             commonRouterResult = routeResult.getResult();

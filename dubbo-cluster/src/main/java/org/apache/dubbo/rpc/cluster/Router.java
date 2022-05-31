@@ -25,7 +25,9 @@ import org.apache.dubbo.rpc.cluster.router.RouterResult;
 import java.util.List;
 
 /**
- * 抽象的是路由器，请求经过 Router 的时候，会按照用户指定的规则匹配出符合条件的 Provider。
+ * Router 决定了一次 Dubbo 调用的目标服务，Router 接口的每个实现类代表了一个路由规则。
+ *
+ * 当 Consumer 访问 Provider 时，Dubbo 根据路由规则筛选出合适的 Provider 列表，之后通过负载均衡算法再次进行筛选。
  *
  * Router. (SPI, Prototype, ThreadSafe)
  * <p>
