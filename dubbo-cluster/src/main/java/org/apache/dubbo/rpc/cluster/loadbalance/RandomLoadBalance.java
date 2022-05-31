@@ -30,6 +30,10 @@ import static org.apache.dubbo.common.constants.RegistryConstants.REGISTRY_SERVI
 import static org.apache.dubbo.rpc.cluster.Constants.WEIGHT_KEY;
 
 /**
+ * 负载均衡算法是加权随机算法。
+ *
+ * RandomLoadBalance 是一个简单、高效的负载均衡实现，它也是 Dubbo 默认使用的 LoadBalance 实现。
+ *
  * This class select one provider from multiple providers randomly.
  * You can define weights for each provider:
  * If the weights are all the same then it will use random.nextInt(number of invokers).
@@ -61,31 +65,31 @@ public class RandomLoadBalance extends AbstractLoadBalance {
         // Every invoker has the same weight?
         boolean sameWeight = true;
         // the maxWeight of every invokers, the minWeight = 0 or the maxWeight of the last invoker
-        int[] weights = new int[length];
+        int[] weights = new int[length];            // 计算每个Invoker对象对应的权重，并填充到weights[]数组中
         // The sum of weights
         int totalWeight = 0;
         for (int i = 0; i < length; i++) {
-            int weight = getWeight(invokers.get(i), invocation);
+            int weight = getWeight(invokers.get(i), invocation);        // 计算每个Invoker的权重，以及总权重totalWeight
             // Sum
             totalWeight += weight;
             // save for later use
             weights[i] = totalWeight;
-            if (sameWeight && totalWeight != weight * (i + 1)) {
+            if (sameWeight && totalWeight != weight * (i + 1)) {     // 检测每个Provider的权重是否相同
                 sameWeight = false;
             }
         }
-        if (totalWeight > 0 && !sameWeight) {
+        if (totalWeight > 0 && !sameWeight) {           // 各个Invoker权重值不相等时，计算随机数落在哪个区间上
             // If (not every invoker has the same weight & at least one invoker's weight>0), select randomly based on totalWeight.
-            int offset = ThreadLocalRandom.current().nextInt(totalWeight);
+            int offset = ThreadLocalRandom.current().nextInt(totalWeight);     // 随机获取一个[0, totalWeight) 区间内的数字
             // Return a invoker based on the random value.
-            for (int i = 0; i < length; i++) {
+            for (int i = 0; i < length; i++) {              // 循环让offset数减去Invoker的权重值，当offset小于0时，返回相应的Invoker
                 if (offset < weights[i]) {
                     return invokers.get(i);
                 }
             }
         }
         // If all invokers have the same weight value or totalWeight=0, return evenly.
-        return invokers.get(ThreadLocalRandom.current().nextInt(length));
+        return invokers.get(ThreadLocalRandom.current().nextInt(length));        // 各个Invoker权重值相同时，随机返回一个Invoker即可
     }
 
     private <T> boolean needWeightLoadBalance(List<Invoker<T>> invokers, Invocation invocation) {

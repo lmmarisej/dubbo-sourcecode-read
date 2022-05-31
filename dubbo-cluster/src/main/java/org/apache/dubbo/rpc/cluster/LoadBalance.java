@@ -39,7 +39,7 @@ import java.util.List;
 public interface LoadBalance {
 
     /**
-     * select one invoker in list.
+     * 传入的 URL 和 Invocation，以及自身的负载均衡算法，从 Invoker 集合中选择一个 Invoker 返回。
      *
      * @param invokers   invokers.
      * @param url        refer url
