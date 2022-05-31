@@ -21,8 +21,7 @@ import org.apache.dubbo.rpc.cluster.Configurator;
 import org.apache.dubbo.rpc.cluster.ConfiguratorFactory;
 
 /**
- * AbsentConfiguratorFactory
- *
+ * AbsentConfiguratorFactory 对应的扩展名是 absent，创建的 Configurator 实现类是 AbsentConfigurator。
  */
 public class AbsentConfiguratorFactory implements ConfiguratorFactory {
 

@@ -43,13 +43,15 @@ import static org.apache.dubbo.rpc.cluster.Constants.CONFIG_VERSION_KEY;
 import static org.apache.dubbo.rpc.cluster.Constants.OVERRIDE_PROVIDERS_KEY;
 
 /**
- * AbstractOverrideConfigurator
+ * 写入注册中心 configurators 中的动态配置有 override 和 absent 两种协议。
+ *
+ * override，表示采用覆盖方式。Dubbo 支持 override 和 absent 两种协议，我们也可以通过 SPI 的方式进行扩展。
  */
 public abstract class AbstractConfigurator implements Configurator {
 
     private static final String TILDE = "~";
 
-    private final URL configuratorUrl;
+    private final URL configuratorUrl;         // 获取该 Configurator 对象对应的配置 URL，例如前文介绍的 override 协议 URL
 
     public AbstractConfigurator(URL url) {
         if (url == null) {
@@ -65,17 +67,18 @@ public abstract class AbstractConfigurator implements Configurator {
 
     @Override
     public URL configure(URL url) {
-        // If override url is not enabled or is invalid, just return.
+        // 这里会根据配置URL的enabled参数以及host决定该URL是否可用，同时还会根据原始URL是否为空以及原始URL的host是否为空，决定当前是否执行后续覆盖逻辑
         if (!configuratorUrl.getParameter(ENABLED_KEY, true) || configuratorUrl.getHost() == null || url == null || url.getHost() == null) {
             return url;
         }
         /*
-         * This if branch is created since 2.7.0.
+         * 针对2.7.0之后版本，这里添加了一个 configVersion 参数作为区分
          */
         String apiVersion = configuratorUrl.getParameter(CONFIG_VERSION_KEY);
         if (StringUtils.isNotEmpty(apiVersion)) {
             String currentSide = url.getSide();
             String configuratorSide = configuratorUrl.getSide();
+            // 根据配置URL中的side参数以及原始URL中的side参数值进行匹配
             if (currentSide.equals(configuratorSide) && CONSUMER.equals(configuratorSide) && 0 == configuratorUrl.getPort()) {
                 url = configureIfMatch(NetUtils.getLocalHost(), url);
             } else if (currentSide.equals(configuratorSide) && PROVIDER.equals(configuratorSide) &&
@@ -87,7 +90,7 @@ public abstract class AbstractConfigurator implements Configurator {
          * This else branch is deprecated and is left only to keep compatibility with versions before 2.7.0
          */
         else {
-            url = configureDeprecated(url);
+            url = configureDeprecated(url);      // 2.7.0版本之前对配置的处理
         }
         return url;
     }
@@ -95,6 +98,7 @@ public abstract class AbstractConfigurator implements Configurator {
     @Deprecated
     private URL configureDeprecated(URL url) {
         // If override url has port, means it is a provider address. We want to control a specific provider with this override url, it may take effect on the specific provider instance or on consumers holding this provider instance.
+        // 如果配置URL中的端口不为空，则是针对Provider的，需要判断原始URL的端口，两者端口相同，才能执行configureIfMatch()方法中的配置方法
         if (configuratorUrl.getPort() != 0) {
             if (url.getPort() == configuratorUrl.getPort()) {
                 return configureIfMatch(url.getHost(), url);
@@ -105,17 +109,20 @@ public abstract class AbstractConfigurator implements Configurator {
              *  1.If it is a consumer ip address, the intention is to control a specific consumer instance, it must takes effect at the consumer side, any provider received this override url should ignore.
              *  2.If the ip is 0.0.0.0, this override url can be used on consumer, and also can be used on provider.
              */
+            // 如果没有指定端口，则该配置 URL 要么是针对 Consumer 的，要么是针对任意 URL 的（即 host 为0.0.0.0）
+            // 如果原始 URL 属于 Consumer，则使用 Consumer 的 host 进行匹配
             if (url.getSide(PROVIDER).equals(CONSUMER)) {
                 // NetUtils.getLocalHost is the ip address consumer registered to registry.
                 return configureIfMatch(NetUtils.getLocalHost(), url);
             } else if (url.getSide(CONSUMER).equals(PROVIDER)) {
                 // take effect on all providers, so address must be 0.0.0.0, otherwise it won't flow to this if branch
-                return configureIfMatch(ANYHOST_VALUE, url);
+                return configureIfMatch(ANYHOST_VALUE, url);     // 如果是 Provider URL，则用 0.0.0.0 来配置
             }
         }
         return url;
     }
 
+    // 重写原始 URL
     private URL configureIfMatch(String host, URL url) {
         if (ANYHOST_VALUE.equals(configuratorUrl.getHost()) || host.equals(configuratorUrl.getHost())) {
             // TODO, to support wildcards
@@ -124,7 +131,8 @@ public abstract class AbstractConfigurator implements Configurator {
                 String configApplication = configuratorUrl.getApplication(configuratorUrl.getUsername());
                 String currentApplication = url.getApplication(url.getUsername());
                 if (configApplication == null || ANY_VALUE.equals(configApplication)
-                        || configApplication.equals(currentApplication)) {
+                        || configApplication.equals(currentApplication)) {      // 匹配application
+                    // 排除不能动态修改的属性，其中包括category、check、dynamic、enabled还有以~开头的属性
                     Set<String> conditionKeys = new HashSet<String>();
                     conditionKeys.add(CATEGORY_KEY);
                     conditionKeys.add(Constants.CHECK_KEY);
@@ -145,12 +153,14 @@ public abstract class AbstractConfigurator implements Configurator {
                             if (startWithTilde) {
                                 conditionKeys.add(key);
                             }
+                            // 如果配置 URL 与原 URL 中以~开头的参数值不相同，则不使用该配置 URL 重写原 URL
                             if (value != null && !ANY_VALUE.equals(value)
                                     && !value.equals(url.getParameter(startWithTilde ? key.substring(1) : key))) {
                                 return url;
                             }
                         }
                     }
+                    // 移除配置 URL 不支持动态配置的参数之后，调用 Configurator 子类的 doConfigure 方法重新生成 URL
                     return doConfigure(url, configuratorUrl.removeParameters(conditionKeys));
                 }
             }
