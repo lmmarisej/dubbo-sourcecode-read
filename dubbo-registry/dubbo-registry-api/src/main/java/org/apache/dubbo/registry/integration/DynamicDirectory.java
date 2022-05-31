@@ -55,41 +55,41 @@ import static org.apache.dubbo.remoting.Constants.CHECK_KEY;
 
 
 /**
- * DynamicDirectory
+ * 动态的 Directory 实现，会根据注册中心推送的通知，动态增删底层 Invoker 集合。
  */
 public abstract class DynamicDirectory<T> extends AbstractDirectory<T> implements NotifyListener {
 
     private static final Logger logger = LoggerFactory.getLogger(DynamicDirectory.class);
 
-    protected final Cluster cluster;
+    protected final Cluster cluster;        // 集群策略适配器，这里通过 Dubbo SPI 方式动态创建适配器实例。
 
-    protected final RouterFactory routerFactory;
-
-    /**
-     * Initialization at construction time, assertion not null
-     */
-    protected final String serviceKey;
+    protected final RouterFactory routerFactory;    // 路由工厂适配器，也是通过 Dubbo SPI 动态创建的适配器实例。
 
     /**
      * Initialization at construction time, assertion not null
      */
-    protected final Class<T> serviceType;
+    protected final String serviceKey;  // 服务对应的 ServiceKey，默认是 {interface}:[group]:[version] 三部分构成。
+
+    /**
+     * Initialization at construction time, assertion not null
+     */
+    protected final Class<T> serviceType;       // 服务接口类型
 
     /**
      * Initialization at construction time, assertion not null, and always assign non-null value
      */
-    protected final URL directoryUrl;
+    protected final URL directoryUrl;       // 只保留 Consumer 属性的 URL，也就是由 queryMap 集合重新生成的 URL。
     protected final boolean multiGroup;
 
     /**
      * Initialization at the time of injection, the assertion is not null
      */
-    protected Protocol protocol;
+    protected Protocol protocol;        // 使用的 Protocol 实现。
 
     /**
      * Initialization at the time of injection, the assertion is not null
      */
-    protected Registry registry;
+    protected Registry registry;        // 使用的注册中心实现。
     protected volatile boolean forbidden = false;
     protected boolean shouldRegister;
     protected boolean shouldSimplified;
@@ -107,7 +107,7 @@ public abstract class DynamicDirectory<T> extends AbstractDirectory<T> implement
      * Rule one: for a certain provider <ip:port,timeout=100>
      * Rule two: for all providers <* ,timeout=5000>
      */
-    protected volatile List<Configurator> configurators;
+    protected volatile List<Configurator> configurators;        // 动态更新的配置信息
 
     protected ServiceInstancesChangedListener serviceListener;
 
@@ -121,7 +121,7 @@ public abstract class DynamicDirectory<T> extends AbstractDirectory<T> implement
 
 
     public DynamicDirectory(Class<T> serviceType, URL url) {
-        super(url, true);
+        super(url, true);      // 传入的url参数是注册中心的URL，例如，zookeeper://127.0.0.1:2181/org.apache.dubbo.registry.RegistryService?...，其中refer参数包含了Consumer信息，例如，refer=application=dubbo-demo-api-consumer&dubbo=2.0.2&interface=org.apache.dubbo.demo.DemoService&pid=13423&register.ip=192.168.124.3&side=consumer(URLDecode之后的值)
 
         ModuleModel moduleModel = url.getOrDefaultModuleModel();
 
@@ -175,9 +175,12 @@ public abstract class DynamicDirectory<T> extends AbstractDirectory<T> implement
         return shouldRegister;
     }
 
+    /**
+     * 在 Consumer 进行订阅的时候被调用
+     */
     public void subscribe(URL url) {
-        setSubscribeUrl(url);
-        registry.subscribe(url, this);
+        setSubscribeUrl(url);       // 将当前RegistryDirectory对象作为ConfigurationListener记录到CONSUMER_CONFIGURATION_LISTENER中
+        registry.subscribe(url, this);    // 完成订阅操作
     }
 
     public void unSubscribe(URL url) {
@@ -187,7 +190,7 @@ public abstract class DynamicDirectory<T> extends AbstractDirectory<T> implement
 
     @Override
     public List<Invoker<T>> doList(BitList<Invoker<T>> invokers, Invocation invocation) {
-        if (forbidden && shouldFailFast) {
+        if (forbidden && shouldFailFast) {  // 检测 forbidden 字段，当该字段在 refreshInvoker() 过程中设置为 true 时，表示无 Provider 可用，直接抛出异常
             // 1. No service provider 2. Service providers are disabled
             throw new RpcException(RpcException.FORBIDDEN_EXCEPTION, "No provider available from registry " +
                 getUrl().getAddress() + " for service " + getConsumerUrl().getServiceKey() + " on consumer " +
@@ -196,11 +199,13 @@ public abstract class DynamicDirectory<T> extends AbstractDirectory<T> implement
         }
 
         if (multiGroup) {
+            // multiGroup为true时的特殊处理，在refreshInvoker()方法中针对multiGroup为true的场景，已经使用Router进行了筛选，所以这里直接返回接口
             return this.getInvokers();
         }
 
         try {
             // Get invokers from cache, only runtime routers will be executed.
+            // 通过RouterChain.route()方法筛选Invoker集合，最终得到符合路由条件的Invoker集合
             List<Invoker<T>> result = routerChain.route(getConsumerUrl(), invokers, invocation);
             return result == null ? BitList.emptyList() : result;
         } catch (Throwable t) {

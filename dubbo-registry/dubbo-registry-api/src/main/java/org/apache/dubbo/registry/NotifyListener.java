@@ -22,6 +22,8 @@ import org.apache.dubbo.registry.client.event.listener.ServiceInstancesChangedLi
 import java.util.List;
 
 /**
+ * 当注册中心的服务配置发生变化时，触发事件。
+ *
  * NotifyListener. (API, Prototype, ThreadSafe)
  *
  * @see org.apache.dubbo.registry.RegistryService#subscribe(URL, NotifyListener)
@@ -29,6 +31,8 @@ import java.util.List;
 public interface NotifyListener {
 
     /**
+     * 监听的是 providers、configurators 和 routers 三个目录，所以在这三个目录下发生变化的时候，就会触发 RegistryDirectory 的 notify() 方法。
+     *
      * Triggered when a service change notification is received.
      * <p>
      * Notify needs to support the contract: <br>

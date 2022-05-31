@@ -66,6 +66,8 @@ import static org.apache.dubbo.rpc.cluster.Constants.CONSUMER_URL_KEY;
 import static org.apache.dubbo.rpc.cluster.Constants.REFER_KEY;
 
 /**
+ * 除了维护 Consumer 端的 URL 信息，还维护了一个 RouterChain 对象，用于记录当前使用的 Router 对象集合。
+ *
  * Abstract implementation of Directory: Invoker list returned from this Directory's list method have been filtered by Routers
  */
 public abstract class AbstractDirectory<T> implements Directory<T> {
@@ -73,15 +75,15 @@ public abstract class AbstractDirectory<T> implements Directory<T> {
     // logger
     private static final Logger logger = LoggerFactory.getLogger(AbstractDirectory.class);
 
-    private final URL url;
+    private final URL url;      // 注册中心 URL
 
     private volatile boolean destroyed = false;
 
     protected volatile URL consumerUrl;
 
-    protected RouterChain<T> routerChain;
+    protected RouterChain<T> routerChain;       // 记录当前使用的 Router 对象集合
 
-    protected final Map<String, String> queryMap;
+    protected final Map<String, String> queryMap;   // Consumer URL 中 refer 参数解析后得到的全部 KV。
 
     /**
      * Invokers initialized flag.
@@ -91,7 +93,7 @@ public abstract class AbstractDirectory<T> implements Directory<T> {
     /**
      * All invokers from registry
      */
-    private volatile BitList<Invoker<T>> invokers = BitList.emptyList();
+    private volatile BitList<Invoker<T>> invokers = BitList.emptyList();        // 动态更新的 Invoker 集合。
 
     /**
      * Valid Invoker. All invokers from registry exclude unavailable and disabled invokers.
@@ -150,6 +152,7 @@ public abstract class AbstractDirectory<T> implements Directory<T> {
 
         // remove some local only parameters
         ApplicationModel applicationModel = url.getOrDefaultApplicationModel();
+        // 解析refer参数值，得到其中Consumer的属性信息
         this.queryMap = applicationModel.getBeanFactory().getBean(ClusterUtils.class).mergeLocalParams(queryMap);
 
         if (consumerUrl == null) {

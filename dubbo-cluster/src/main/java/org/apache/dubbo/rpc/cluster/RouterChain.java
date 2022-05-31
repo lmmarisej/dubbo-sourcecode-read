@@ -46,7 +46,7 @@ import java.util.stream.Collectors;
 import static org.apache.dubbo.rpc.cluster.Constants.ROUTER_KEY;
 
 /**
- * Router chain
+ * 路由规则
  */
 public class RouterChain<T> {
     private static final Logger logger = LoggerFactory.getLogger(RouterChain.class);

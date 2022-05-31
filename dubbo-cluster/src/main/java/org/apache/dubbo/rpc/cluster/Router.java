@@ -25,6 +25,8 @@ import org.apache.dubbo.rpc.cluster.router.RouterResult;
 import java.util.List;
 
 /**
+ * 抽象的是路由器，请求经过 Router 的时候，会按照用户指定的规则匹配出符合条件的 Provider。
+ *
  * Router. (SPI, Prototype, ThreadSafe)
  * <p>
  * <a href="http://en.wikipedia.org/wiki/Routing">Routing</a>

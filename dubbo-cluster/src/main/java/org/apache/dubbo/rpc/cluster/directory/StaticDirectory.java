@@ -29,7 +29,7 @@ import org.apache.dubbo.rpc.cluster.router.state.BitList;
 import java.util.List;
 
 /**
- * StaticDirectory
+ * 维护的 Invoker 集合则是静态的，在 StaticDirectory 对象创建完成之后，不会再发生变化。
  */
 public class StaticDirectory<T> extends AbstractDirectory<T> {
     private static final Logger logger = LoggerFactory.getLogger(StaticDirectory.class);
@@ -89,9 +89,9 @@ public class StaticDirectory<T> extends AbstractDirectory<T> {
     }
 
     public void buildRouterChain() {
-        RouterChain<T> routerChain = RouterChain.buildChain(getInterface(), getUrl());
-        routerChain.setInvokers(getInvokers());
-        this.setRouterChain(routerChain);
+        RouterChain<T> routerChain = RouterChain.buildChain(getInterface(), getUrl());   // 创建内置 Router 集合
+        routerChain.setInvokers(getInvokers());     // 将 invokers 与 RouterChain 关联
+        this.setRouterChain(routerChain);           // 设置 routerChain 字段
     }
 
     public void notify(List<Invoker<T>> invokers) {
@@ -105,6 +105,7 @@ public class StaticDirectory<T> extends AbstractDirectory<T> {
     protected List<Invoker<T>> doList(BitList<Invoker<T>> invokers, Invocation invocation) throws RpcException {
         if (routerChain != null) {
             try {
+                // 通过 RouterChain 过滤出符合条件的 Invoker 集合
                 List<Invoker<T>> finalInvokers = routerChain.route(getConsumerUrl(), invokers, invocation);
                 return finalInvokers == null ? BitList.emptyList() : finalInvokers;
             } catch (Throwable t) {

@@ -26,6 +26,8 @@ import org.apache.dubbo.rpc.RpcException;
 import java.util.List;
 
 /**
+ * 表示多个 Invoker 的集合，是后续路由规则、负载均衡策略以及集群容错的基础。
+ *
  * Directory. (SPI, Prototype, ThreadSafe)
  * <p>
  * <a href="http://en.wikipedia.org/wiki/Directory_service">Directory Service</a>
@@ -35,27 +37,28 @@ import java.util.List;
 public interface Directory<T> extends Node {
 
     /**
-     * get service type.
+     * 服务接口类型。
      *
      * @return service type.
      */
     Class<T> getInterface();
 
     /**
-     * list invokers.
-     * filtered by invocation
+     * list() 方法会根据传入的 Invocation 请求，过滤自身维护的 Invoker 集合，返回符合条件的 Invoker 集合。
      *
      * @return invokers
      */
     List<Invoker<T>> list(Invocation invocation) throws RpcException;
 
     /**
+     * getAllInvokers() 方法返回当前 Directory 对象维护的全部 Invoker 对象。
+     *
      * list invokers
      * include all invokers from registry
      */
     List<Invoker<T>> getAllInvokers();
 
-    URL getConsumerUrl();
+    URL getConsumerUrl();       // Consumer 端的 URL
 
     boolean isDestroyed();
 

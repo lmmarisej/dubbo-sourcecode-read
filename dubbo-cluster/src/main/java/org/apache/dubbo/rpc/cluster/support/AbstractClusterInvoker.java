@@ -55,7 +55,9 @@ import static org.apache.dubbo.rpc.cluster.Constants.DEFAULT_CLUSTER_AVAILABLE_C
 import static org.apache.dubbo.rpc.cluster.Constants.DEFAULT_CLUSTER_STICKY;
 
 /**
- * AbstractClusterInvoker
+ * 1.当调用进入 Cluster 的时候，Cluster 会创建一个 AbstractClusterInvoker 对象，在这个 AbstractClusterInvoker 中，首先会从 Directory 中获取当前 Invoker 集合；
+ * 2.然后按照 Router 集合进行路由，得到符合条件的 Invoker 集合；
+ * 3.接下来按照 LoadBalance 指定的负载均衡策略得到最终要调用的 Invoker 对象。
  */
 public abstract class AbstractClusterInvoker<T> implements ClusterInvoker<T> {
 
