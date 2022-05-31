@@ -36,6 +36,7 @@ import java.util.concurrent.ConcurrentMap;
  */
 public class LoggerFactory {
 
+    // 维护了当前使用的全部 FailsafeLogger 对象
     private static final ConcurrentMap<String, FailsafeLogger> LOGGERS = new ConcurrentHashMap<>();
     private static volatile LoggerAdapter LOGGER_ADAPTER;
 

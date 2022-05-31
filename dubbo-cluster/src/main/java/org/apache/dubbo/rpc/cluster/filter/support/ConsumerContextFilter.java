@@ -42,6 +42,8 @@ import static org.apache.dubbo.common.constants.CommonConstants.REMOTE_APPLICATI
 import static org.apache.dubbo.common.constants.CommonConstants.TIME_COUNTDOWN_KEY;
 
 /**
+ * 在当前的 RpcContext 中记录本地调用的一些状态信息（会记录到 LOCAL 对应的 RpcContext 中）
+ *
  * ConsumerContextFilter set current RpcContext with invoker,invocation, local host, remote host and port
  * for consumer invoker.It does it to make the requires info available to execution thread's RpcContext.
  *
@@ -63,9 +65,9 @@ public class ConsumerContextFilter implements ClusterFilter, ClusterFilter.Liste
         RpcContext.RestoreServiceContext originServiceContext = RpcContext.storeServiceContext();
         try {
             RpcContext.getServiceContext()
-                .setInvoker(invoker)
-                .setInvocation(invocation)
-                .setLocalAddress(NetUtils.getLocalHost(), 0);
+                .setInvoker(invoker)                // 记录 Invoker
+                .setInvocation(invocation)          // 记录 Invocation
+                .setLocalAddress(NetUtils.getLocalHost(), 0);       // 记录本地地址以及远端地址
 
             RpcContext context = RpcContext.getClientAttachment();
             context.setAttachment(REMOTE_APPLICATION_KEY, invoker.getUrl().getApplication());
@@ -96,10 +98,12 @@ public class ConsumerContextFilter implements ClusterFilter, ClusterFilter.Liste
             }
 
             // pass default timeout set by end user (ReferenceConfig)
+            // 检测是否超时
             Object countDown = context.getObjectAttachment(TIME_COUNTDOWN_KEY);
             if (countDown != null) {
                 TimeoutCountDown timeoutCountDown = (TimeoutCountDown) countDown;
                 if (timeoutCountDown.isExpired()) {
+                    // 如果请求超时，则不再发起远程调用，直接让 AsyncRpcResult 异常结束。
                     return AsyncRpcResult.newDefaultAsyncResult(new RpcException(RpcException.TIMEOUT_TERMINATE,
                         "No time left for making the following call: " + invocation.getServiceName() + "."
                             + invocation.getMethodName() + ", terminate directly."), invocation);

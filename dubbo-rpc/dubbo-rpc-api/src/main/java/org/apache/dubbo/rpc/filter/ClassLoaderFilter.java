@@ -29,13 +29,14 @@ import static org.apache.dubbo.common.constants.CommonConstants.STAGED_CLASSLOAD
 import static org.apache.dubbo.common.constants.CommonConstants.WORKING_CLASSLOADER_KEY;
 
 /**
- * Set the current execution thread class loader to service interface's class loader.
+ * Provider 端的一个 Filter 实现，主要功能是切换类加载器。
  */
 @Activate(group = CommonConstants.PROVIDER, order = -30000)
 public class ClassLoaderFilter implements Filter, BaseFilter.Listener {
 
     @Override
     public Result invoke(Invoker<?> invoker, Invocation invocation) throws RpcException {
+        // 获取当前线程关联的 contextClassLoader
         ClassLoader stagedClassLoader = Thread.currentThread().getContextClassLoader();
         ClassLoader effectiveClassLoader;
         if (invocation.getServiceModel() != null) {
@@ -48,12 +49,13 @@ public class ClassLoaderFilter implements Filter, BaseFilter.Listener {
             invocation.put(STAGED_CLASSLOADER_KEY, stagedClassLoader);
             invocation.put(WORKING_CLASSLOADER_KEY, effectiveClassLoader);
 
+            // 设置为 invoker.getInterface().getClassLoader()，也就是加载服务接口类的类加载器
             Thread.currentThread().setContextClassLoader(effectiveClassLoader);
         }
         try {
             return invoker.invoke(invocation);
         } finally {
-            Thread.currentThread().setContextClassLoader(stagedClassLoader);
+            Thread.currentThread().setContextClassLoader(stagedClassLoader);        // 复原
         }
     }
 

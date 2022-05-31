@@ -24,16 +24,11 @@ import java.util.concurrent.atomic.AtomicLong;
  * As a state it contain name of key ( e.g. method), last invocation time, interval and rate count.
  */
 class StatItem {
-
-    private final String name;
-
-    private final AtomicLong lastResetTime;
-
-    private final long interval;
-
-    private final AtomicInteger token;
-
-    private final int rate;
+    private final String name;      // 对应的 ServiceKey。
+    private final AtomicLong lastResetTime;      // 记录最近一次重置token的时间戳
+    private final long interval;    // 重置 token 值的时间周期，这样就实现了在 interval 时间段内能够通过 rate 个请求的效果。
+    private final AtomicInteger token;  // 初始值为 rate 值，每通过一个请求 token 递减一，当减为 0 时，不再通过任何请求，实现限流的作用。
+    private final int rate;     // 一段时间内能通过的 TPS 上限。
 
     StatItem(String name, int rate, long interval) {
         this.name = name;
@@ -45,7 +40,7 @@ class StatItem {
 
     public boolean isAllowable() {
         long now = System.currentTimeMillis();
-        if (now > lastResetTime.get() + interval) {
+        if (now > lastResetTime.get() + interval) {     // 周期性重置token
             token.set(rate);
             lastResetTime.set(now);
         }

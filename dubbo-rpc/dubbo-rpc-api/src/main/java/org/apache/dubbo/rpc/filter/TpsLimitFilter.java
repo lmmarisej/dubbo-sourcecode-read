@@ -30,6 +30,8 @@ import org.apache.dubbo.rpc.filter.tps.TPSLimiter;
 import static org.apache.dubbo.rpc.Constants.TPS_LIMIT_RATE_KEY;
 
 /**
+ * TpsLimitFilter 是 Provider 端对 TPS 限流的实现。
+ *
  * TpsLimitFilter limit the TPS (transaction per second) for all method of a service or a particular method.
  * Service or method url can define <b>tps</b> or <b>tps.interval</b> to control this control.It use {@link DefaultTPSLimiter}
  * as it limit checker. If a provider service method is configured with <b>tps</b>(optionally with <b>tps.interval</b>),then
@@ -39,12 +41,13 @@ import static org.apache.dubbo.rpc.Constants.TPS_LIMIT_RATE_KEY;
 @Activate(group = CommonConstants.PROVIDER, value = TPS_LIMIT_RATE_KEY)
 public class TpsLimitFilter implements Filter {
 
+    // 维护了一个 TPSLimiter 接口类型的对象，其默认实现是 DefaultTPSLimiter，由它来控制 Provider 端的 TPS 上限值为多少。
     private final TPSLimiter tpsLimiter = new DefaultTPSLimiter();
 
     @Override
     public Result invoke(Invoker<?> invoker, Invocation invocation) throws RpcException {
 
-        if (!tpsLimiter.isAllowable(invoker.getUrl(), invocation)) {
+        if (!tpsLimiter.isAllowable(invoker.getUrl(), invocation)) {            // 超过限流之后，直接抛出异常
             throw new RpcException(
                     "Failed to invoke service " +
                             invoker.getInterface().getName() +

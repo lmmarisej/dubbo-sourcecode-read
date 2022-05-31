@@ -34,19 +34,24 @@ import static org.apache.dubbo.rpc.Constants.TPS_LIMIT_RATE_KEY;
  */
 public class DefaultTPSLimiter implements TPSLimiter {
 
-    private final ConcurrentMap<String, StatItem> stats = new ConcurrentHashMap<String, StatItem>();
+    // 为每个 ServiceKey 维护了一个相应的 StatItem 对象
+    private final ConcurrentMap<String, StatItem> stats = new ConcurrentHashMap<>();
 
+    /**
+     * 从 URL 中读取 tps 参数值（默认为 -1，即没有限流），对于需要限流的请求，会从 stats 集合中获取（或创建）相应 StatItem 对象，
+     * 然后调用 StatItem 对象的isAllowable() 方法判断是否被限流
+     */
     @Override
     public boolean isAllowable(URL url, Invocation invocation) {
         int rate = url.getMethodParameter(invocation.getMethodName(), TPS_LIMIT_RATE_KEY, -1);
         long interval = url.getMethodParameter(invocation.getMethodName(), TPS_LIMIT_INTERVAL_KEY, DEFAULT_TPS_LIMIT_INTERVAL);
         String serviceKey = url.getServiceKey();
-        if (rate > 0) {
-            StatItem statItem = stats.get(serviceKey);
+        StatItem statItem = stats.get(serviceKey);
+        if (rate > 0) {     // 需要限流，尝试从stats集合中获取相应的StatItem对象
             if (statItem == null) {
                 stats.putIfAbsent(serviceKey, new StatItem(serviceKey, rate, interval));
                 statItem = stats.get(serviceKey);
-            } else {
+            } else {        // URL中参数发生变化时，会重建对应的StatItem
                 //rate or interval has changed, rebuild
                 if (statItem.getRate() != rate || statItem.getInterval() != interval) {
                     stats.put(serviceKey, new StatItem(serviceKey, rate, interval));
@@ -54,8 +59,7 @@ public class DefaultTPSLimiter implements TPSLimiter {
                 }
             }
             return statItem.isAllowable();
-        } else {
-            StatItem statItem = stats.get(serviceKey);
+        } else {        // 不需要限流，则从 stats 集合中清除相应的 StatItem 对象
             if (statItem != null) {
                 stats.remove(serviceKey);
             }

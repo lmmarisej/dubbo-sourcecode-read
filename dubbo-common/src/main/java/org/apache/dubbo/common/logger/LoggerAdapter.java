@@ -22,7 +22,7 @@ import org.apache.dubbo.common.extension.SPI;
 import java.io.File;
 
 /**
- * Logger provider
+ * 对应每个第三方框架的一个相应实现，用于创建相应的 Dubbo Logger 实现对象。
  */
 @SPI(scope = ExtensionScope.FRAMEWORK)
 public interface LoggerAdapter {

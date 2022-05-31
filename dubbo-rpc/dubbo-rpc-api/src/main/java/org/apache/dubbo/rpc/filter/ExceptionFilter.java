@@ -54,18 +54,18 @@ public class ExceptionFilter implements Filter, Filter.Listener {
 
     @Override
     public void onResponse(Result appResponse, Invoker<?> invoker, Invocation invocation) {
-        if (appResponse.hasException() && GenericService.class != invoker.getInterface()) {
+        if (appResponse.hasException() && GenericService.class != invoker.getInterface()) {     // 根据响应对象异常字段判断是否异常
             try {
                 Throwable exception = appResponse.getException();
 
                 // directly throw if it's checked exception
-                if (!(exception instanceof RuntimeException) && (exception instanceof Exception)) {
+                if (!(exception instanceof RuntimeException) && (exception instanceof Exception)) { // 是否支持类型
                     return;
                 }
                 // directly throw if the exception appears in the signature
                 try {
                     Method method = invoker.getInterface().getMethod(invocation.getMethodName(), invocation.getParameterTypes());
-                    Class<?>[] exceptionClasses = method.getExceptionTypes();
+                    Class<?>[] exceptionClasses = method.getExceptionTypes();       // 根据方法签名获取异常类型
                     for (Class<?> exceptionClass : exceptionClasses) {
                         if (exception.getClass().equals(exceptionClass)) {
                             return;
@@ -95,7 +95,7 @@ public class ExceptionFilter implements Filter, Filter.Listener {
                 }
 
                 // otherwise, wrap with RuntimeException and throw back to the client
-                appResponse.setException(new RuntimeException(StringUtils.toString(exception)));
+                appResponse.setException(new RuntimeException(StringUtils.toString(exception)));  // 用户自定义异常，包装异常为结果返回
             } catch (Throwable e) {
                 logger.warn("Fail to ExceptionFilter when called by " + RpcContext.getServiceContext().getRemoteHost() + ". service: " + invoker.getInterface().getName() + ", method: " + invocation.getMethodName() + ", exception: " + e.getClass().getName() + ": " + e.getMessage(), e);
             }

@@ -32,22 +32,22 @@ import java.util.concurrent.atomic.AtomicLong;
  */
 public class RpcStatus {
 
-    private static final ConcurrentMap<String, RpcStatus> SERVICE_STATISTICS = new ConcurrentHashMap<String,
-            RpcStatus>();
+    // 记录了当前 Consumer 调用每个服务的状态信息，其中 Key 是 URL，Value 是对应的 RpcStatus 对象；
+    private static final ConcurrentMap<String, RpcStatus> SERVICE_STATISTICS = new ConcurrentHashMap<>();
 
-    private static final ConcurrentMap<String, ConcurrentMap<String, RpcStatus>> METHOD_STATISTICS =
-            new ConcurrentHashMap<String, ConcurrentMap<String, RpcStatus>>();
+    // 记录了当前 Consumer 调用每个服务方法的状态信息，其中第一层 Key 是 URL ，第二层 Key 是方法名称，第三层是对应的 RpcStatus 对象。
+    private static final ConcurrentMap<String, ConcurrentMap<String, RpcStatus>> METHOD_STATISTICS = new ConcurrentHashMap<>();
 
-    private final ConcurrentMap<String, Object> values = new ConcurrentHashMap<String, Object>();
+    private final ConcurrentMap<String, Object> values = new ConcurrentHashMap<>();
 
-    private final AtomicInteger active = new AtomicInteger();
-    private final AtomicLong total = new AtomicLong();
-    private final AtomicInteger failed = new AtomicInteger();
-    private final AtomicLong totalElapsed = new AtomicLong();
-    private final AtomicLong failedElapsed = new AtomicLong();
-    private final AtomicLong maxElapsed = new AtomicLong();
-    private final AtomicLong failedMaxElapsed = new AtomicLong();
-    private final AtomicLong succeededMaxElapsed = new AtomicLong();
+    private final AtomicInteger active = new AtomicInteger();       // 当前并发度。这也是 ActiveLimitFilter 中关注的并发度。
+    private final AtomicLong total = new AtomicLong();      // 调用的总数。
+    private final AtomicInteger failed = new AtomicInteger();       // 失败的调用数。
+    private final AtomicLong totalElapsed = new AtomicLong();       // 所有调用的总耗时。
+    private final AtomicLong failedElapsed = new AtomicLong();      // 所有失败调用的总耗时。
+    private final AtomicLong maxElapsed = new AtomicLong();         // 所有调用中最长的耗时。
+    private final AtomicLong failedMaxElapsed = new AtomicLong();   // 所有失败调用中最长的耗时。
+    private final AtomicLong succeededMaxElapsed = new AtomicLong();    // 所有成功调用中最长的耗时。
 
     private RpcStatus() {
     }
@@ -96,36 +96,35 @@ public class RpcStatus {
     }
 
     /**
-     * @param url
+     * 在远程调用开始之前执行，其中会从 SERVICE_STATISTICS 集合和 METHOD_STATISTICS 集合
+     * 中获取服务和服务方法对应的 RpcStatus 对象，然后分别将它们的 active 字段加一
      */
     public static boolean beginCount(URL url, String methodName, int max) {
         max = (max <= 0) ? Integer.MAX_VALUE : max;
-        RpcStatus appStatus = getStatus(url);
-        RpcStatus methodStatus = getStatus(url, methodName);
-        if (methodStatus.active.get() == Integer.MAX_VALUE) {
+        RpcStatus appStatus = getStatus(url);                     // 获取服务对应的RpcStatus对象
+        RpcStatus methodStatus = getStatus(url, methodName);      // 获取服务方法对应的RpcStatus对象
+        if (methodStatus.active.get() == Integer.MAX_VALUE) {       // 无限制
             return false;
         }
         for (int i; ; ) {
             i = methodStatus.active.get();
 
-            if (i == Integer.MAX_VALUE || i + 1 > max) {
+            if (i == Integer.MAX_VALUE || i + 1 > max) {        // 并发度超过max上限，直接返回false
                 return false;
             }
 
-            if (methodStatus.active.compareAndSet(i, i + 1)) {
-                break;
+            if (methodStatus.active.compareAndSet(i, i + 1)) {       // CAS操作
+                break;      // 更新成功后退出当前循环
             }
         }
 
-        appStatus.active.incrementAndGet();
+        appStatus.active.incrementAndGet();     // 单个服务的并发度加一
 
         return true;
     }
 
     /**
-     * @param url
-     * @param elapsed
-     * @param succeeded
+     * 完成统计
      */
     public static void endCount(URL url, String methodName, long elapsed, boolean succeeded) {
         endCount(getStatus(url), elapsed, succeeded);
@@ -133,21 +132,21 @@ public class RpcStatus {
     }
 
     private static void endCount(RpcStatus status, long elapsed, boolean succeeded) {
-        status.active.decrementAndGet();
-        status.total.incrementAndGet();
-        status.totalElapsed.addAndGet(elapsed);
+        status.active.decrementAndGet();         // 请求完成，降低并发度
+        status.total.incrementAndGet();     // 调用总次数增加
+        status.totalElapsed.addAndGet(elapsed);     // 调用总耗时增加
 
-        if (status.maxElapsed.get() < elapsed) {
+        if (status.maxElapsed.get() < elapsed) {        // 更新最大耗时
             status.maxElapsed.set(elapsed);
         }
 
-        if (succeeded) {
+        if (succeeded) {        // 如果此次调用成功，则会更新成功调用的最大耗时
             if (status.succeededMaxElapsed.get() < elapsed) {
                 status.succeededMaxElapsed.set(elapsed);
             }
 
         } else {
-            status.failed.incrementAndGet();
+            status.failed.incrementAndGet();        // 如果此次调用失败，则会更新失败调用的最大耗时
             status.failedElapsed.addAndGet(elapsed);
             if (status.failedMaxElapsed.get() < elapsed) {
                 status.failedMaxElapsed.set(elapsed);

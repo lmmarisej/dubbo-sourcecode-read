@@ -20,9 +20,14 @@ import org.apache.dubbo.common.Version;
 import org.apache.dubbo.common.logger.Logger;
 import org.apache.dubbo.common.utils.NetUtils;
 
+/**
+ * 封装了一个 Logger 对象，这个 Logger 接口是 Dubbo 自己定义的接口，Dubbo 针对每种第三方框架都提供了一个 Logger 接口的实现。
+ *
+ * 在每个 Logger 日志写入操作之外，都添加了 try/catch 异常处理。
+ */
 public class FailsafeLogger implements Logger {
 
-    private Logger logger;
+    private Logger logger;          // 维护了一个log4j日志框架中的Logger对象，实现了适配器的功能
 
     private static boolean disabled = false;
 
@@ -129,7 +134,7 @@ public class FailsafeLogger implements Logger {
             return;
         }
         try {
-            logger.info(appendContextMessage(msg));
+            logger.info(appendContextMessage(msg));     // 直接调用 log4j 日志框架的 Logger 写入日志
         } catch (Throwable t) {
         }
     }

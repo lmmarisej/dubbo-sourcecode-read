@@ -51,6 +51,8 @@ import static org.apache.dubbo.rpc.Constants.TOKEN_KEY;
 
 
 /**
+ * ContextFilter 是 Provider 端的一个 Filter 实现，它主要用来初始化 Provider 端的 RpcContext。
+ *
  * ContextFilter set the provider RpcContext with invoker, invocation, local port it is using and host for
  * current execution thread.
  *
@@ -95,7 +97,7 @@ public class ContextFilter implements Filter, Filter.Listener {
         RpcContext.getServiceContext().setInvoker(invoker)
                 .setInvocation(invocation);
 
-        RpcContext context = RpcContext.getServerAttachment();
+        RpcContext context = RpcContext.getServerAttachment();      // 获取 RpcContext
 //                .setAttachments(attachments)  // merged from dubbox
         context.setLocalAddress(invoker.getUrl().getHost(), invoker.getUrl().getPort());
 
@@ -106,7 +108,7 @@ public class ContextFilter implements Filter, Filter.Listener {
             RpcContext.getServiceContext().setRemoteApplicationName(context.getAttachment(REMOTE_APPLICATION_KEY));
         }
 
-        long timeout = RpcUtils.getTimeout(invocation, -1);
+        long timeout = RpcUtils.getTimeout(invocation, -1);     // 设置超时时间
         if (timeout != -1) {
             // pass to next hop
             RpcContext.getClientAttachment().setObjectAttachment(TIME_COUNTDOWN_KEY, TimeoutCountDown.newCountDown(timeout, TimeUnit.MILLISECONDS));
@@ -116,27 +118,29 @@ public class ContextFilter implements Filter, Filter.Listener {
         // we may already add some attachments into RpcContext before this filter (e.g. in rest protocol)
         if (attachments != null) {
             if (context.getObjectAttachments().size() > 0) {
-                context.getObjectAttachments().putAll(attachments);
+                context.getObjectAttachments().putAll(attachments);     // 向RpcContext中设置Attachments
             } else {
                 context.setObjectAttachments(attachments);
             }
         }
 
         if (invocation instanceof RpcInvocation) {
-            ((RpcInvocation) invocation).setInvoker(invoker);
+            ((RpcInvocation) invocation).setInvoker(invoker);       // 向 Invocation 设置 Invoker
         }
 
         try {
+            // 在整个调用过程中，需要保持当前 RpcContext 不被删除，这里会将 remove 开关关掉，这样，removeContext() 方法不会删除 LOCAL RpcContext 了
             context.clearAfterEachInvoke(false);
             return invoker.invoke(invocation);
         } finally {
-            context.clearAfterEachInvoke(true);
+            context.clearAfterEachInvoke(true);      // 重置remove开关
         }
     }
 
     @Override
     public void onResponse(Result appResponse, Invoker<?> invoker, Invocation invocation) {
         // pass attachments to result
+        // 将 SERVER_LOCAL 这个 RpcContext 中的附加信息添加到 AppResponse 的 attachments 字段中，返回给 Consumer。
         appResponse.addObjectAttachments(RpcContext.getServerContext().getObjectAttachments());
         removeContext();
     }

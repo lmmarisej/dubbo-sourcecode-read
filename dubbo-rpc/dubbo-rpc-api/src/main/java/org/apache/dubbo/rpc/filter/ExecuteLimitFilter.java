@@ -33,6 +33,8 @@ import static org.apache.dubbo.rpc.Constants.EXECUTES_KEY;
 
 
 /**
+ * Dubbo 在 Provider 端限流的实现，与 Consumer 端的限流实现 ActiveLimitFilter 相对应。
+ *
  * The maximum parallel execution request count per method per service for the provider.If the max configured
  * <b>executes</b> is set to 10 and if invoke request where it is already 10 then it will throw exception. It
  * continues the same behaviour un till it is <10.
@@ -47,6 +49,7 @@ public class ExecuteLimitFilter implements Filter, Filter.Listener {
         URL url = invoker.getUrl();
         String methodName = invocation.getMethodName();
         int max = url.getMethodParameter(methodName, EXECUTES_KEY, 0);
+        // 尝试增加 active 的值，当并发度达到 executes 配置指定的阈值，则直接抛出异常
         if (!RpcStatus.beginCount(url, methodName, max)) {
             throw new RpcException(RpcException.LIMIT_EXCEEDED_EXCEPTION,
                     "Failed to invoke method " + invocation.getMethodName() + " in provider " +
@@ -56,7 +59,7 @@ public class ExecuteLimitFilter implements Filter, Filter.Listener {
 
         invocation.put(EXECUTE_LIMIT_FILTER_START_TIME, System.currentTimeMillis());
         try {
-            return invoker.invoke(invocation);
+            return invoker.invoke(invocation);      // 执行后续 Filter 以及业务逻辑
         } catch (Throwable t) {
             if (t instanceof RuntimeException) {
                 throw (RuntimeException) t;
@@ -68,6 +71,7 @@ public class ExecuteLimitFilter implements Filter, Filter.Listener {
 
     @Override
     public void onResponse(Result appResponse, Invoker<?> invoker, Invocation invocation) {
+        // 减小 active 的值，同时完成对一次调用的统计
         RpcStatus.endCount(invoker.getUrl(), getRealMethodName(invoker, invocation), getElapsed(invocation), true);
     }
 
