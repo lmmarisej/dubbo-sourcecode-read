@@ -51,14 +51,16 @@ public class DispatcherServlet extends HttpServlet {
         return INSTANCE;
     }
 
+    /**
+     * 收到的全部请求将委托给 DispatcherServlet 这个 HttpServlet 实现
+     */
     @Override
-    protected void service(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
-        HttpHandler handler = HANDLERS.get(request.getLocalPort());
-        if (handler == null) {// service not found.
+    protected void service(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        HttpHandler handler = HANDLERS.get(request.getLocalPort());  // 从HANDLERS集合中查询端口对应的HttpHandler对象
+        if (handler == null) {// service not found.      // 端口没有对应的HttpHandler实现
             response.sendError(HttpServletResponse.SC_NOT_FOUND, "Service not found.");
         } else {
-            handler.handle(request, response);
+            handler.handle(request, response);  // 将请求委托给HttpHandler对象处理
         }
     }
 

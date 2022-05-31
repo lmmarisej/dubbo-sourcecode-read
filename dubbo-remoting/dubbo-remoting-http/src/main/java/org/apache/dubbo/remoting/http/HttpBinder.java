@@ -23,7 +23,7 @@ import org.apache.dubbo.common.extension.SPI;
 import org.apache.dubbo.remoting.Constants;
 
 /**
- * HttpBinder
+ * dubbo-remoting-http 模块的入口
  */
 @SPI(value = "jetty", scope = ExtensionScope.FRAMEWORK)
 public interface HttpBinder {

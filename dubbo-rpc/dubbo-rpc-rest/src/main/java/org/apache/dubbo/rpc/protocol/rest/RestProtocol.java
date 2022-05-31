@@ -194,7 +194,7 @@ public class RestProtocol extends AbstractProxyProtocol {
 
         // TODO protocol
         ResteasyWebTarget target = client.target("http://" + url.getHost() + ":" + url.getPort() + "/" + getContextPath(url));
-        return target.proxy(serviceType);
+        return target.proxy(serviceType);         // 返回的是serviceType类型的代理对象
     }
 
     @Override

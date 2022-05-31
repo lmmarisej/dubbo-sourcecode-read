@@ -44,26 +44,30 @@ public class JettyHttpServer extends AbstractHttpServer {
 
     private URL url;
 
+    /**
+     * 初始化 Jetty Server，其中会配置 Jetty Server 使用到的线程池以及处理请求 Handler
+     */
     public JettyHttpServer(URL url, final HttpHandler handler) {
-        super(url, handler);
+        super(url, handler);         // 初始化AbstractHttpServer中的url字段和handler字段
         this.url = url;
 
         // set dubbo's logger
         System.setProperty("org.eclipse.jetty.util.log.class", JettyLoggerAdapter.class.getName());
 
+        // 添加 HttpHandler
         DispatcherServlet.addHttpHandler(url.getParameter(Constants.BIND_PORT_KEY, url.getPort()), handler);
 
-        int threads = url.getParameter(THREADS_KEY, DEFAULT_THREADS);
+        int threads = url.getParameter(THREADS_KEY, DEFAULT_THREADS);    // 创建线程池
         QueuedThreadPool threadPool = new QueuedThreadPool();
         threadPool.setDaemon(true);
         threadPool.setMaxThreads(threads);
         threadPool.setMinThreads(threads);
 
-        server = new Server(threadPool);
+        server = new Server(threadPool);         // 创建Jetty Server
 
         ServerConnector connector = new ServerConnector(server);
 
-        String bindIp = url.getParameter(Constants.BIND_IP_KEY, url.getHost());
+        String bindIp = url.getParameter(Constants.BIND_IP_KEY, url.getHost()); // 创建 ServerConnector，并指定绑定的 ip 和 port
         if (!url.isAnyHost() && NetUtils.isValidLocalHost(bindIp)) {
             connector.setHost(bindIp);
         }
@@ -71,13 +75,14 @@ public class JettyHttpServer extends AbstractHttpServer {
 
         server.addConnector(connector);
 
-        ServletHandler servletHandler = new ServletHandler();
+        ServletHandler servletHandler = new ServletHandler();    // 创建ServletHandler并与Jetty Server关联，由DispatcherServlet处理全部的请求
         ServletHolder servletHolder = servletHandler.addServletWithMapping(DispatcherServlet.class, "/*");
         servletHolder.setInitOrder(2);
 
         // dubbo's original impl can't support the use of ServletContext
         //        server.addHandler(servletHandler);
         // TODO Context.SESSIONS is the best option here? (In jetty 9.x, it becomes ServletContextHandler.SESSIONS)
+        // 创建ServletContextHandler并与Jetty Server关联
         ServletContextHandler context = new ServletContextHandler(server, "/", ServletContextHandler.SESSIONS);
         context.setServletHandler(servletHandler);
         ServletManager.getInstance().addServletContext(url.getParameter(Constants.BIND_PORT_KEY, url.getPort()), context.getServletContext());
