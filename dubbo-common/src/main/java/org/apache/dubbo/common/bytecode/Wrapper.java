@@ -34,6 +34,11 @@ import java.util.regex.Matcher;
 import java.util.stream.Collectors;
 
 /**
+ * Wrapper 类本身是抽象类，是对 Java 类的一种包装。
+ * <p>
+ * Wrapper 会从 Java 类中的字段和方法抽象出相应 propertyName 和 methodName，在需要调用一个字段或方法的时候，
+ * 会根据传入的方法名和参数进行匹配，找到对应的字段和方法进行调用。
+ * <p>
  * Dubbo 提供的自动包装特性，解决一个扩展接口可能有多个扩展实现类的重复代码问题。
  * <p>
  * Dubbo 将多个扩展实现类的公共逻辑，抽象到 Wrapper 类中。
@@ -102,10 +107,10 @@ public abstract class Wrapper {
             throw new NoSuchMethodException("Method [" + mn + "] not found.");
         }
     };
-    private static AtomicLong WRAPPER_CLASS_COUNTER = new AtomicLong(0);
+    private static final AtomicLong WRAPPER_CLASS_COUNTER = new AtomicLong(0);
 
     /**
-     * get wrapper.
+     * 会根据不同的 Java 对象，使用 Javassist 生成一个相应的 Wrapper 实现对象。
      *
      * @param c Class instance.
      * @return Wrapper instance(not null).
@@ -120,9 +125,12 @@ public abstract class Wrapper {
             return OBJECT_WRAPPER;
         }
 
-        return WRAPPER_MAP.computeIfAbsent(c, Wrapper::makeWrapper);
+        return WRAPPER_MAP.computeIfAbsent(c, Wrapper::makeWrapper);    // 是否缓存了对应的 Wrapper 对象，如果已缓存则直接返回
     }
 
+    /**
+     * 动态生成 Wrapper 实现类，以及相应的实例对象。
+     */
     private static Wrapper makeWrapper(Class<?> c) {
         if (c.isPrimitive()) {
             throw new IllegalArgumentException("Can not create wrapper for primitive type: " + c);
@@ -131,8 +139,10 @@ public abstract class Wrapper {
         String name = c.getName();
         ClassLoader cl = ClassUtils.getClassLoader(c);
 
+        // 构造相应的 getPropertyValue() 方法和 setPropertyValue() 方法
         StringBuilder c1 = new StringBuilder("public void setPropertyValue(Object o, String n, Object v){ ");
         StringBuilder c2 = new StringBuilder("public Object getPropertyValue(Object o, String n){ ");
+        // 处理 public 方法，这些 public 方法会添加到 invokeMethod 方法中
         StringBuilder c3 = new StringBuilder("public Object invokeMethod(Object o, String n, Class[] p, Object[] v) throws " + InvocationTargetException.class.getName() + "{ ");
 
         c1.append(name).append(" w; try{ w = ((").append(name).append(")$1); }catch(Throwable e){ throw new IllegalArgumentException(e); }");
@@ -143,6 +153,8 @@ public abstract class Wrapper {
         Map<String, Method> ms = new LinkedHashMap<>(); // <method desc, Method instance>
         List<String> mns = new ArrayList<>(); // method names.
         List<String> dmns = new ArrayList<>(); // declaring method names.
+
+        // 遍历传入的 Class 对象的所有 public 字段和 public 方法，构建组装 Wrapper 实现类需要的 Java 代码。
 
         // get all public field.
         for (Field f : c.getFields()) {
@@ -251,6 +263,8 @@ public abstract class Wrapper {
         }
         c1.append(" throw new ").append(NoSuchPropertyException.class.getName()).append("(\"Not found property \\\"\"+$2+\"\\\" field or setter method in class ").append(c.getName()).append(".\"); }");
         c2.append(" throw new ").append(NoSuchPropertyException.class.getName()).append("(\"Not found property \\\"\"+$2+\"\\\" field or getter method in class ").append(c.getName()).append(".\"); }");
+
+        // 通过 ClassGenerator 创建 Wrapper 实现类
 
         // make class
         long id = WRAPPER_CLASS_COUNTER.getAndIncrement();

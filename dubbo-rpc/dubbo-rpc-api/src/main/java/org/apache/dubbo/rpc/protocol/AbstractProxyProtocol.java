@@ -108,6 +108,7 @@ public abstract class AbstractProxyProtocol extends AbstractProtocol {
     protected <T> Invoker<T> protocolBindingRefer(final Class<T> type, final URL url) throws RpcException {
         final Invoker<T> target = proxyFactory.getInvoker(doRefer(type, url), type, url);
         Invoker<T> invoker = new AbstractInvoker<T>(type, url) {
+            // 将 doInvoke() 方法返回的结果封装成 CompletableFuture 对象，然后再封装成 AsyncRpcResult 对象返回
             @Override
             protected Result doInvoke(Invocation invocation) throws Throwable {
                 try {

@@ -30,7 +30,7 @@ public class RpcInvocation implements Invocation, Serializable {
 
     private static final long serialVersionUID = -4355285085441097045L;
 
-    private String methodName;
+    private String methodName;      // Invoker 对象的相应方法
 
     private Class<?>[] parameterTypes;
 

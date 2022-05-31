@@ -116,6 +116,7 @@ public abstract class AbstractProxyInvoker<T> implements Invoker<T> {
                 Profiler.setToBizProfiler(originEntry);
             }
 
+            // 将CompletableFuture封装成AsyncRpcResult返回
             CompletableFuture<Object> future = wrapWithFuture(value, invocation);
             CompletableFuture<AppResponse> appResponseFuture = future.handle((obj, t) -> {
                 AppResponse result = new AppResponse(invocation);

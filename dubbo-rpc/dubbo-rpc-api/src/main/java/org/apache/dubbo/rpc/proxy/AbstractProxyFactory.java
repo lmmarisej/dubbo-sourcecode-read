@@ -37,7 +37,7 @@ import static org.apache.dubbo.common.constants.CommonConstants.COMMA_SPLIT_PATT
 import static org.apache.dubbo.rpc.Constants.INTERFACES;
 
 /**
- * AbstractProxyFactory
+ * 主要处理的是需要代理的接口。
  */
 public abstract class AbstractProxyFactory implements ProxyFactory {
     private static final Class<?>[] INTERNAL_INTERFACES = new Class<?>[]{
@@ -54,15 +54,15 @@ public abstract class AbstractProxyFactory implements ProxyFactory {
     @Override
     public <T> T getProxy(Invoker<T> invoker, boolean generic) throws RpcException {
         // when compiling with native image, ensure that the order of the interfaces remains unchanged
-        LinkedHashSet<Class<?>> interfaces = new LinkedHashSet<>();
+        LinkedHashSet<Class<?>> interfaces = new LinkedHashSet<>();     // 记录要代理的接口
         ClassLoader classLoader = getClassLoader(invoker);
 
-        String config = invoker.getUrl().getParameter(INTERFACES);
+        String config = invoker.getUrl().getParameter(INTERFACES);      // 获取 URL 中 interfaces 参数指定的接口
         if (StringUtils.isNotEmpty(config)) {
-            String[] types = COMMA_SPLIT_PATTERN.split(config);
+            String[] types = COMMA_SPLIT_PATTERN.split(config);         // 按照逗号切分 interfaces 参数，得到接口集合
             for (String type : types) {
                 try {
-                    interfaces.add(ReflectUtils.forName(classLoader, type));
+                    interfaces.add(ReflectUtils.forName(classLoader, type));     // 记录这些接口信息
                 } catch (Throwable e) {
                     // ignore
                 }
@@ -71,10 +71,10 @@ public abstract class AbstractProxyFactory implements ProxyFactory {
         }
 
         Class<?> realInterfaceClass = null;
-        if (generic) {
+        if (generic) {       // 针对泛化接口的处理
             try {
                 // find the real interface from url
-                String realInterface = invoker.getUrl().getParameter(Constants.INTERFACE);
+                String realInterface = invoker.getUrl().getParameter(Constants.INTERFACE);     // 获取 Invoker 中 interface 字段指定的接口
                 realInterfaceClass = ReflectUtils.forName(classLoader, realInterface);
                 interfaces.add(realInterfaceClass);
             } catch (Throwable e) {
@@ -86,11 +86,11 @@ public abstract class AbstractProxyFactory implements ProxyFactory {
             }
         }
 
-        interfaces.add(invoker.getInterface());
-        interfaces.addAll(Arrays.asList(INTERNAL_INTERFACES));
+        interfaces.add(invoker.getInterface());     // 获取 Invoker 中指定的接口
+        interfaces.addAll(Arrays.asList(INTERNAL_INTERFACES));      // 额外增加接口
 
         try {
-            return getProxy(invoker, interfaces.toArray(new Class<?>[0]));
+            return getProxy(invoker, interfaces.toArray(new Class<?>[0]));     // 调用抽象的getProxy()重载方法
         } catch (Throwable t) {
             if (generic) {
                 if (realInterfaceClass != null) {
@@ -122,6 +122,9 @@ public abstract class AbstractProxyFactory implements ProxyFactory {
         return INTERNAL_INTERFACES.clone();
     }
 
+    /**
+     * 创建代理对象。
+     */
     public abstract <T> T getProxy(Invoker<T> invoker, Class<?>[] types);
 
 }

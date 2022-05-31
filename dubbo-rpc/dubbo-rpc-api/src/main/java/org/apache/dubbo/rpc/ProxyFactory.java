@@ -30,7 +30,7 @@ import static org.apache.dubbo.rpc.Constants.PROXY_KEY;
  *
  * ProxyFactory. (API/SPI, Singleton, ThreadSafe)
  */
-@SPI(value = "javassist", scope = FRAMEWORK)
+@SPI(value = "javassist", scope = FRAMEWORK)        // 默认实现使用 Javassist 来创建代码对象。
 public interface ProxyFactory {
 
     /**

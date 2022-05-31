@@ -26,7 +26,7 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 
 /**
- * JdkRpcProxyFactory
+ * 创建一个匿名 AbstractProxyInvoker 的实现
  */
 public class JdkProxyFactory extends AbstractProxyFactory {
 
@@ -43,8 +43,9 @@ public class JdkProxyFactory extends AbstractProxyFactory {
             protected Object doInvoke(T proxy, String methodName,
                                       Class<?>[] parameterTypes,
                                       Object[] arguments) throws Throwable {
+                // 使用反射方式查找methodName对应的方法，并进行调用
                 Method method = proxy.getClass().getMethod(methodName, parameterTypes);
-                return method.invoke(proxy, arguments);
+                return method.invoke(proxy, arguments);     // 通过 Java 原生的反射技术
             }
         };
     }

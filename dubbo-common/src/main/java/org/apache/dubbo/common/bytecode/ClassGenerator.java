@@ -45,25 +45,27 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
 
 /**
- * ClassGenerator
+ * 创建 ClassLoader 对应的 ClassPool。
+ *
+ * ClassGenerator 封装了 Javassist 的基本操作，还定义了很多字段用来暂存代理类的信息，在其 toClass() 方法中会用这些暂存的信息来动态生成代理类。
  */
 public final class ClassGenerator {
 
     private static final AtomicLong CLASS_NAME_COUNTER = new AtomicLong(0);
     private static final String SIMPLE_NAME_TAG = "<init>";
-    private static final Map<ClassLoader, ClassPool> POOL_MAP = new ConcurrentHashMap<ClassLoader, ClassPool>(); //ClassLoader - ClassPool
+    private static final Map<ClassLoader, ClassPool> POOL_MAP = new ConcurrentHashMap<>(); //ClassLoader - ClassPool
     private ClassPool mPool;
     private CtClass mCtc;
-    private String mClassName;
-    private String mSuperClass;
-    private Set<String> mInterfaces;
-    private List<String> mFields;
-    private List<String> mConstructors;
-    private List<String> mMethods;
+    private String mClassName;      // 代理类的类名。
+    private String mSuperClass;     // 代理类父类的名称。
+    private Set<String> mInterfaces;    // 代理类实现的接口。
+    private List<String> mFields;   // 代理类中的字段。
+    private List<String> mConstructors; // 代理类中全部构造方法的信息，其中包括构造方法的具体实现。
+    private List<String> mMethods;  // 代理类中全部方法的信息，其中包括方法的具体实现。
     private ClassLoader mClassLoader;
     private Map<String, Method> mCopyMethods; // <method desc,method instance>
     private Map<String, Constructor<?>> mCopyConstructors; // <constructor desc,constructor instance>
-    private boolean mDefaultConstructor = false;
+    private boolean mDefaultConstructor = false;        // 标识是否为代理类生成的默认构造方法。
 
     private ClassGenerator() {
     }
@@ -81,6 +83,9 @@ public final class ClassGenerator {
         return new ClassGenerator(loader, getClassPool(loader));
     }
 
+    /**
+     * 检测该 Java 类是否实现了 DC 这个标识接口
+     */
     public static boolean isDynamicClass(Class<?> cl) {
         return ClassGenerator.DC.class.isAssignableFrom(cl);
     }
@@ -285,43 +290,42 @@ public final class ClassGenerator {
     }
 
     /**
-     * @param neighbor    A class belonging to the same package that this
-     *                    class belongs to.  It is used to load the class.
+     * 根据实例字段用 Javassist 生成代理类。
+     *
+     * @param neighbor    A class belonging to the same package that this class belongs to.  It is used to load the class.
      */
     public Class<?> toClass(Class<?> neighbor) {
-        return toClass(neighbor,
-            mClassLoader,
-            getClass().getProtectionDomain());
+        return toClass(neighbor, mClassLoader, getClass().getProtectionDomain());
     }
 
     public Class<?> toClass(Class<?> neighborClass, ClassLoader loader, ProtectionDomain pd) {
         if (mCtc != null) {
             mCtc.detach();
         }
-        long id = CLASS_NAME_COUNTER.getAndIncrement();
+        long id = CLASS_NAME_COUNTER.getAndIncrement();   // 在代理类继承父类的时候，会将该 id 作为后缀编号，防止代理类重名
         try {
             CtClass ctcs = mSuperClass == null ? null : mPool.get(mSuperClass);
             if (mClassName == null) {
                 mClassName = (mSuperClass == null || javassist.Modifier.isPublic(ctcs.getModifiers())
                         ? ClassGenerator.class.getName() : mSuperClass + "$sc") + id;
             }
-            mCtc = mPool.makeClass(mClassName);
+            mCtc = mPool.makeClass(mClassName);     // 创建 CtClass，用来生成代理类
             if (mSuperClass != null) {
-                mCtc.setSuperclass(ctcs);
+                mCtc.setSuperclass(ctcs);       // 设置代理类的父类
             }
-            mCtc.addInterface(mPool.get(DC.class.getName())); // add dynamic class tag.
+            mCtc.addInterface(mPool.get(DC.class.getName())); // add dynamic class tag.    // 设置代理类实现的接口，默认会添加DC这个接口
             if (mInterfaces != null) {
                 for (String cl : mInterfaces) {
                     mCtc.addInterface(mPool.get(cl));
                 }
             }
-            if (mFields != null) {
+            if (mFields != null) { // 设置代理类的字段
                 for (String code : mFields) {
                     mCtc.addField(CtField.make(code, mCtc));
                 }
             }
             if (mMethods != null) {
-                for (String code : mMethods) {
+                for (String code : mMethods) {  // 生成代理类的方法
                     if (code.charAt(0) == ':') {
                         mCtc.addMethod(CtNewMethod.copy(getCtMethod(mCopyMethods.get(code.substring(1))),
                                 code.substring(1, code.indexOf('(')), mCtc, null));
@@ -330,10 +334,10 @@ public final class ClassGenerator {
                     }
                 }
             }
-            if (mDefaultConstructor) {
+            if (mDefaultConstructor) {       // 生成默认的构造方法
                 mCtc.addConstructor(CtNewConstructor.defaultConstructor(mCtc));
             }
-            if (mConstructors != null) {
+            if (mConstructors != null) {     // 生成构造方法
                 for (String code : mConstructors) {
                     if (code.charAt(0) == ':') {
                         mCtc.addConstructor(CtNewConstructor
@@ -347,7 +351,7 @@ public final class ClassGenerator {
             }
 
             try {
-                return mPool.toClass(mCtc, neighborClass, loader, pd);
+                return mPool.toClass(mCtc, neighborClass, loader, pd);      // 生成代理类 Class
             } catch (Throwable t) {
                 if (!(t instanceof CannotCompileException)) {
                     return mPool.toClass(mCtc, loader, pd);

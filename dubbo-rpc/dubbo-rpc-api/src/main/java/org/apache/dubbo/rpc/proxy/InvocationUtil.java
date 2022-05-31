@@ -54,6 +54,7 @@ public class InvocationUtil {
             }
             rpcInvocation.put(Profiler.PROFILER_KEY, bizProfiler);
             try {
+                // 调用 invoke() 方法发起远程调用，拿到 AsyncRpcResult 之后，调用 recreate() 方法获取响应结果(或是Future)
                 return invoker.invoke(rpcInvocation).recreate();
             } finally {
                 Profiler.release(bizProfiler);
