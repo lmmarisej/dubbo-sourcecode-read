@@ -23,6 +23,8 @@ import org.apache.dubbo.rpc.RpcException;
 import org.apache.dubbo.rpc.protocol.AbstractProtocol;
 
 /**
+ * Protocol 层与 Mock 相关的实现
+ *
  * MockProtocol is used for generating a mock invoker by URL and type on consumer side
  */
 final public class MockProtocol extends AbstractProtocol {

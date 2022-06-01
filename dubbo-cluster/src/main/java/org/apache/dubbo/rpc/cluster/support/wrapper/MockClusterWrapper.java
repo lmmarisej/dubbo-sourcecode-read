@@ -22,21 +22,20 @@ import org.apache.dubbo.rpc.cluster.Cluster;
 import org.apache.dubbo.rpc.cluster.Directory;
 
 /**
- * mock impl
- *
+ * Cluster 对象的包装类，负责创建 MockClusterInvoker 对象，是 Dubbo Mock 机制的入口。
  */
 public class MockClusterWrapper implements Cluster {
 
     private final Cluster cluster;
 
-    public MockClusterWrapper(Cluster cluster) {
+    public MockClusterWrapper(Cluster cluster) {            // Wrapper类都会有一个拷贝构造函数
         this.cluster = cluster;
     }
 
     @Override
     public <T> Invoker<T> join(Directory<T> directory, boolean buildFilterChain) throws RpcException {
-        return new MockClusterInvoker<T>(directory,
-                this.cluster.join(directory, buildFilterChain));
+        // 用 MockClusterInvoker 进行包装
+        return new MockClusterInvoker<>(directory, this.cluster.join(directory, buildFilterChain));
     }
 
     public Cluster getCluster() {
