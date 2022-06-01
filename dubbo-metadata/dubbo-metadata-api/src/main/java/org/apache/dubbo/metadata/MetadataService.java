@@ -31,6 +31,8 @@ import static java.util.Collections.unmodifiableSortedSet;
 import static org.apache.dubbo.common.URL.buildKey;
 
 /**
+ * Dubbo 中的每个 ServiceInstance 都会发布 MetadataService 接口供 Consumer 端查询元数据。
+ *
  * This service is used to expose the metadata information inside a Dubbo process.
  * Typical uses include:
  * 1. The Consumer queries the metadata information of the Provider to list the interfaces and each interface's configuration
@@ -46,14 +48,14 @@ public interface MetadataService {
     /**
      * The contract version of {@link MetadataService}, the future update must make sure compatible.
      */
-    String VERSION = "1.0.0";
+    String VERSION = "1.0.0";       // 获取当前MetadataService接口的版本
 
     /**
      * Gets the current Dubbo Service name
      *
      * @return non-null
      */
-    String serviceName();
+    String serviceName();       // 获取当前ServiceInstance所属服务的名称
 
     /**
      * Gets the version of {@link MetadataService} that always equals {@link #VERSION}
@@ -74,7 +76,7 @@ public interface MetadataService {
      * @see #toSortedStrings(Stream)
      * @see URL#toFullString()
      */
-    default SortedSet<String> getSubscribedURLs() {
+    default SortedSet<String> getSubscribedURLs() {         // 获取当前ServiceInstance订阅的全部URL
         throw new UnsupportedOperationException("This operation is not supported for consumer.");
     }
 
@@ -85,7 +87,7 @@ public interface MetadataService {
      * @see #toSortedStrings(Stream)
      * @see URL#toFullString()
      */
-    default SortedSet<String> getExportedURLs() {
+    default SortedSet<String> getExportedURLs() {           // 获取当前ServiceInstance发布的全部URL
         return getExportedURLs(ALL_SERVICE_INTERFACES);
     }
 
@@ -97,7 +99,7 @@ public interface MetadataService {
      * @see #toSortedStrings(Stream)
      * @see URL#toFullString()
      */
-    default SortedSet<String> getExportedURLs(String serviceInterface) {
+    default SortedSet<String> getExportedURLs(String serviceInterface) {  // 根据服务接口查找当前ServiceInstance暴露的全部接口
         return getExportedURLs(serviceInterface, null);
     }
 
@@ -111,7 +113,7 @@ public interface MetadataService {
      * @see #toSortedStrings(Stream)
      * @see URL#toFullString()
      */
-    default SortedSet<String> getExportedURLs(String serviceInterface, String group) {
+    default SortedSet<String> getExportedURLs(String serviceInterface, String group) {  // 根据服务接口和group两个条件查找当前ServiceInstance暴露的全部接口
         return getExportedURLs(serviceInterface, group, null);
     }
 
@@ -126,6 +128,7 @@ public interface MetadataService {
      * @see #toSortedStrings(Stream)
      * @see URL#toFullString()
      */
+    // 根据服务接口、group和version三个条件查找当前ServiceInstance暴露的全部接口
     default SortedSet<String> getExportedURLs(String serviceInterface, String group, String version) {
         return getExportedURLs(serviceInterface, group, version, null);
     }
@@ -142,6 +145,7 @@ public interface MetadataService {
      * @see #toSortedStrings(Stream)
      * @see URL#toFullString()
      */
+    // 根据服务接口、group、version和protocol四个条件查找当前ServiceInstance暴露的全部接口
     SortedSet<String> getExportedURLs(String serviceInterface, String group, String version, String protocol);
 
     default Set<URL> getExportedServiceURLs() {
@@ -149,9 +153,7 @@ public interface MetadataService {
     }
 
     /**
-     * Interface definition.
-     *
-     * @return
+     * 根据指定条件查询 ServiceDefinition
      */
     default String getServiceDefinition(String interfaceName, String version, String group) {
         return getServiceDefinition(buildKey(interfaceName, group, version));

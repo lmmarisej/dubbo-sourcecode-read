@@ -43,7 +43,7 @@ import static org.apache.dubbo.common.constants.CommonConstants.METADATA_SERVICE
 import static org.apache.dubbo.common.constants.CommonConstants.METADATA_SERVICE_PROTOCOL_KEY;
 
 /**
- * Export metadata service
+ * 负责将 MetadataService 接口作为一个 Dubbo 服务发布出去。
  */
 public class ConfigurableMetadataServiceExporter {
 
@@ -59,17 +59,18 @@ public class ConfigurableMetadataServiceExporter {
         this.metadataService = metadataService;
     }
 
-    public synchronized ConfigurableMetadataServiceExporter export() {
+    public synchronized ConfigurableMetadataServiceExporter export() {    // 将MetadataService作为一个Dubbo服务发布出去
         if (serviceConfig == null || !isExported()) {
-            this.serviceConfig = buildServiceConfig();
+            this.serviceConfig = buildServiceConfig();       // 创建 ServiceConfig 对象
             // export
+            // 发布MetadataService服务，ServiceConfig发布服务的流程在前面已经详细分析过了，这里不再展开
             serviceConfig.export();
             metadataService.setMetadataURL(serviceConfig.getExportedUrls().get(0));
             if (logger.isInfoEnabled()) {
                 logger.info("The MetadataService exports urls : " + serviceConfig.getExportedUrls());
             }
         } else {
-            if (logger.isWarnEnabled()) {
+            if (logger.isWarnEnabled()) {       // 输出日志
                 logger.warn("The MetadataService has been exported : " + serviceConfig.getExportedUrls());
             }
         }
@@ -77,7 +78,7 @@ public class ConfigurableMetadataServiceExporter {
         return this;
     }
 
-    public ConfigurableMetadataServiceExporter unexport() {
+    public ConfigurableMetadataServiceExporter unexport() {        // 注销掉MetadataService服务
         if (isExported()) {
             serviceConfig.unexport();
             metadataService.setMetadataURL(null);
@@ -85,7 +86,7 @@ public class ConfigurableMetadataServiceExporter {
         return this;
     }
 
-    public boolean isExported() {
+    public boolean isExported() {           // 检测MetadataService服务是否已经发布
         return serviceConfig != null && serviceConfig.isExported() && !serviceConfig.isUnexported();
     }
 
@@ -172,12 +173,12 @@ public class ConfigurableMetadataServiceExporter {
         registryConfig.setId("internal-metadata-registry");
         serviceConfig.setRegistry(registryConfig);
         serviceConfig.setRegister(false);
-        serviceConfig.setProtocol(generateMetadataProtocol());
-        serviceConfig.setInterface(MetadataService.class);
+        serviceConfig.setProtocol(generateMetadataProtocol());      // 设置Protocol（默认是Dubbo）
+        serviceConfig.setInterface(MetadataService.class);       // 设置服务接口
         serviceConfig.setDelay(0);
-        serviceConfig.setRef(metadataService);
+        serviceConfig.setRef(metadataService);       // 设置MetadataService对象
         serviceConfig.setGroup(applicationConfig.getName());
-        serviceConfig.setVersion(MetadataService.VERSION);
+        serviceConfig.setVersion(MetadataService.VERSION);      // 设置version
         serviceConfig.setMethods(generateMethodConfig());
         serviceConfig.setConnections(1); // separate connection
         serviceConfig.setExecutes(100); // max tasks running at the same time
@@ -213,6 +214,7 @@ public class ConfigurableMetadataServiceExporter {
     }
 
     // for unit test
+    // MetadataService可能以多种协议发布，这里返回发布MetadataService服务的所有URL
     public List<URL> getExportedURLs() {
         return serviceConfig != null ? serviceConfig.getExportedUrls() : emptyList();
     }

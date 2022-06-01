@@ -34,6 +34,8 @@ import static org.apache.dubbo.common.constants.CommonConstants.COMMA_SEPARATOR;
 import static org.apache.dubbo.common.extension.ExtensionScope.APPLICATION;
 
 /**
+ * 实现 Service ID 到 Service Name 之间的转换，底层会依赖配置中心实现数据存储和查询。
+ *
  * This will interact with remote metadata center to find the interface-app mapping and will cache the data locally.
  *
  * Call variants of getCachedMapping() methods whenever need to use the mapping data.
@@ -45,10 +47,14 @@ public interface ServiceNameMapping extends Destroyable {
 
     /**
      * Map the specified Dubbo service interface, group, version and protocol to current Dubbo service name
+     *
+     * 服务接口、group、version、protocol四部分构成了Service ID，并与当前Service Name之间形成映射，记录到配置中心
      */
     boolean map(URL url);
 
     /**
+     * 获取默认的 ServiceNameMapping 接口的扩展实现
+     *
      * Get the default extension of {@link ServiceNameMapping}
      *
      * @return non-null {@link ServiceNameMapping}

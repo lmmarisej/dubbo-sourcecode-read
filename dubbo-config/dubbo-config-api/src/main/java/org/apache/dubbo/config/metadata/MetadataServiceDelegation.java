@@ -47,6 +47,8 @@ import static org.apache.dubbo.common.constants.CommonConstants.PROTOCOL_KEY;
 import static org.apache.dubbo.common.utils.CollectionUtils.isEmpty;
 
 /**
+ * 在 MetadataService 接口中定义的都是查询元数据的方法
+ *
  * Implementation providing remote RPC service to facilitate the query of metadata information.
  */
 public class MetadataServiceDelegation implements MetadataService, Disposable {
@@ -70,6 +72,10 @@ public class MetadataServiceDelegation implements MetadataService, Disposable {
      */
     @Override
     public String serviceName() {
+        // ServiceName默认是从ApplicationModel中获取 ExtensionLoader、DubboBootstrap以及ApplicationModel是单个Dubbo进程范围内的单例对象，
+        // ExtensionLoader用于Dubbo SPI机制加载扩展实现，DubboBootstrap用于启动Dubbo进程，
+        // ApplicationModel用于表示一个Dubbo实例，其中维护了多个ProviderModel对象表示当前Dubbo实例发布的服务，
+        // 维护了多个ConsumerModel对象表示当前Dubbo实例引用的服务。
         return ApplicationModel.ofNullable(applicationModel).getApplicationName();
     }
 

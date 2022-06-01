@@ -34,6 +34,9 @@ public class ServiceMetadataIdentifier extends BaseServiceMetadataIdentifier imp
     public ServiceMetadataIdentifier() {
     }
 
+    /**
+     * 包含了服务接口、version、group、side、revision 和 protocol 六个核心字段。
+     */
     public ServiceMetadataIdentifier(String serviceInterface, String version, String group, String side, String revision, String protocol) {
         this.serviceInterface = serviceInterface;
         this.version = version;

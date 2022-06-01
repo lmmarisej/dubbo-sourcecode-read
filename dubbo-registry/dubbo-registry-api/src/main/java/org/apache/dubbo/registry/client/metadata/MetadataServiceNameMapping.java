@@ -38,6 +38,9 @@ import java.util.Set;
 import static org.apache.dubbo.common.constants.CommonConstants.COMMA_SEPARATOR;
 import static org.apache.dubbo.common.constants.CommonConstants.DEFAULT_KEY;
 
+/**
+ * 依赖 DynamicConfiguration 读写配置中心，完成 Service ID 和 Service Name 的映射。
+ */
 public class MetadataServiceNameMapping extends AbstractServiceNameMapping {
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
@@ -62,7 +65,7 @@ public class MetadataServiceNameMapping extends AbstractServiceNameMapping {
             return false;
         }
         String serviceInterface = url.getServiceInterface();
-        if (IGNORED_SERVICE_INTERFACES.contains(serviceInterface)) {
+        if (IGNORED_SERVICE_INTERFACES.contains(serviceInterface)) {   // 跳过MetadataService接口的处理
             return true;
         }
 

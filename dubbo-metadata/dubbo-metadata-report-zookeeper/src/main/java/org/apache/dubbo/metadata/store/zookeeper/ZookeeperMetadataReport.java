@@ -51,7 +51,7 @@ import static org.apache.dubbo.metadata.ServiceNameMapping.DEFAULT_MAPPING_GROUP
 import static org.apache.dubbo.metadata.ServiceNameMapping.getAppNames;
 
 /**
- * ZookeeperMetadataReport
+ * 接入 ZooKeeper 作为元数据中心的。
  */
 public class ZookeeperMetadataReport extends AbstractMetadataReport {
 
@@ -59,7 +59,7 @@ public class ZookeeperMetadataReport extends AbstractMetadataReport {
 
     private final String root;
 
-    ZookeeperClient zkClient;
+    ZookeeperClient zkClient;   // 在 ZookeeperMetadataReport 中维护了一个 ZookeeperClient 实例用来和 ZooKeeper 进行交互。
 
     private Map<String, MappingDataListener> casListenerMap = new ConcurrentHashMap<>();
 
@@ -83,6 +83,10 @@ public class ZookeeperMetadataReport extends AbstractMetadataReport {
         }
         return root + PATH_SEPARATOR;
     }
+
+    /*
+            do*() 方法的实现，这些方法核心都是通过 ZookeeperClient 创建、查询、删除对应的  节点
+     */
 
     @Override
     protected void doStoreProviderMetadata(MetadataIdentifier providerMetadataIdentifier, String serviceDefinitions) {

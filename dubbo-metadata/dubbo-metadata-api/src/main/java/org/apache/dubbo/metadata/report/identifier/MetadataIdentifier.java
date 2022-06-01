@@ -32,6 +32,9 @@ public class MetadataIdentifier extends BaseServiceMetadataIdentifier implements
     public MetadataIdentifier() {
     }
 
+    /**
+     * 包含了服务接口、version、group、side 和 application 五个核心字段。
+     */
     public MetadataIdentifier(String serviceInterface, String version, String group, String side, String application) {
         this.serviceInterface = serviceInterface;
         this.version = version;

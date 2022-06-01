@@ -71,16 +71,14 @@ public abstract class AbstractServiceNameMapping implements ServiceNameMapping, 
     }
 
     /**
-     * Get the service names from the specified Dubbo service interface, group, version and protocol
+     * 根据服务接口、group、version、protocol四部分构成的Service ID，查询对应的Service Name
      *
-     * @return
+     * Get the service names from the specified Dubbo service interface, group, version and protocol
      */
     abstract public Set<String> get(URL url);
 
     /**
      * Get the service names from the specified Dubbo service interface, group, version and protocol
-     *
-     * @return
      */
     abstract public Set<String> getAndListen(URL url, MappingListener mappingListener);
 

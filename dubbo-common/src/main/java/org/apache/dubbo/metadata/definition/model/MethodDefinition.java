@@ -27,7 +27,7 @@ import static org.apache.dubbo.metadata.definition.model.TypeDefinition.formatTy
 import static org.apache.dubbo.metadata.definition.model.TypeDefinition.formatTypes;
 
 /**
- * 2015/1/27.
+ * 记录了方法的名称、参数类型、返回值类型以及方法参数涉及的所有 TypeDefinition。
  */
 public class MethodDefinition implements Serializable {
 

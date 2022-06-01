@@ -38,6 +38,7 @@ public class StubServiceDescriptor implements ServiceDescriptor {
     // to accelerate search
     private final Map<String, List<MethodDescriptor>> methods = new HashMap<>();
     private final Map<String, Map<String, MethodDescriptor>> descToMethods = new HashMap<>();
+    // 用于记录当前 ServiceInstance 发布的 ServiceDefinition 信息，其中 Key 为 Provider URL 的 ServiceKey
     private final ConcurrentNavigableMap<String, FullServiceDefinition> serviceDefinitions = new ConcurrentSkipListMap<>();
 
     public StubServiceDescriptor(String interfaceName, Class<?> interfaceClass) {

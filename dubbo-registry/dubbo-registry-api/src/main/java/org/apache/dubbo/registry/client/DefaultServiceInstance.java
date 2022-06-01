@@ -36,6 +36,8 @@ import static org.apache.dubbo.registry.client.metadata.ServiceInstanceMetadataU
 import static org.apache.dubbo.registry.client.metadata.ServiceInstanceMetadataUtils.EXPORTED_SERVICES_REVISION_PROPERTY_NAME;
 
 /**
+ * DefaultServiceInstance 是一个普通的 POJO 类
+ *
  * The default implementation of {@link ServiceInstance}.
  *
  * @since 2.7.5
@@ -45,19 +47,12 @@ public class DefaultServiceInstance implements ServiceInstance {
     private static final long serialVersionUID = 1149677083747278100L;
 
     private String rawAddress;
-
-    private String serviceName;
-
+    private String serviceName;    // ServiceInstance 关联的 Service Name。
     private String host;
-
     private int port;
-
-    private boolean enabled = true;
-
+    private boolean enabled = true;     // ServiceInstance 是否可用的状态。
     private boolean healthy = true;
-
-    private Map<String, String> metadata = new HashMap<>();
-
+    private Map<String, String> metadata = new HashMap<>();     // ServiceInstance 关联的元数据。
     private transient String address;
     private transient MetadataInfo serviceMetadata;
 

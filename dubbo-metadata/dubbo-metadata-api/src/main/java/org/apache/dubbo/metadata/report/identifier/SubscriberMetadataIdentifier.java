@@ -21,7 +21,7 @@ import org.apache.dubbo.common.URL;
 import static org.apache.dubbo.common.constants.CommonConstants.REVISION_KEY;
 
 /**
- * 2019-08-12
+ * 包含了服务接口、version、group、side 和 revision 五个核心字段。
  */
 public class SubscriberMetadataIdentifier extends BaseApplicationMetadataIdentifier implements BaseMetadataIdentifier {
 

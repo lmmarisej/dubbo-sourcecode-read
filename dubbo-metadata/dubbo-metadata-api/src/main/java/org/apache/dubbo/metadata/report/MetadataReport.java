@@ -31,13 +31,22 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+/**
+ * 将 URL 中的一部分内容存储到元数据中心，从而减少注册中心的压力。
+ *
+ * 元数据中心的数据只是给本端自己使用的，改动不需要告知对端。
+ *
+ * 在注册中心存储的数据量减少的同时，还减少了因为配置修改导致的注册中心频繁通知监听者情况的发生，很好地减轻了注册中心的压力。
+ */
 public interface MetadataReport {
     /**
      * Service Definition -- START
+     *
+     * 存储 Provider 元数据
      **/
     void storeProviderMetadata(MetadataIdentifier providerMetadataIdentifier, ServiceDefinition serviceDefinition);
 
-    String getServiceDefinition(MetadataIdentifier metadataIdentifier);
+    String getServiceDefinition(MetadataIdentifier metadataIdentifier);         // 查询 ServiceDefinition
 
     /**
      * Application Metadata -- START
@@ -54,10 +63,12 @@ public interface MetadataReport {
 
     /**
      * deprecated or need triage
+     *
+     * 存储Consumer元数据
      **/
     void storeConsumerMetadata(MetadataIdentifier consumerMetadataIdentifier, Map<String, String> serviceParameterMap);
 
-    List<String> getExportedURLs(ServiceMetadataIdentifier metadataIdentifier);
+    List<String> getExportedURLs(ServiceMetadataIdentifier metadataIdentifier);  // 查询暴露的 URL
 
     void destroy();
 
@@ -65,6 +76,7 @@ public interface MetadataReport {
 
     void removeServiceMetadata(ServiceMetadataIdentifier metadataIdentifier);
 
+    // 存储、删除 Service 元数据
     void saveSubscribedData(SubscriberMetadataIdentifier subscriberMetadataIdentifier, Set<String> urls);
 
     List<String> getSubscribedURLs(SubscriberMetadataIdentifier subscriberMetadataIdentifier);

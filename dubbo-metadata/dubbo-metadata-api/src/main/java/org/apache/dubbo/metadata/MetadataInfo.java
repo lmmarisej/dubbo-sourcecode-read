@@ -69,7 +69,9 @@ public class MetadataInfo implements Serializable {
     private transient final Map<String, String> extendParams;
     private transient final Map<String, String> instanceParams;
     protected transient volatile boolean updated = false;
+    // 用于记录当前 ServiceInstance 引用的 URL 集合，其中 Key 是 ServiceKey（即 interface、group 和 version 三部分构成），Value 是对应的 URL 集合。
     private transient ConcurrentNavigableMap<String, SortedSet<URL>> subscribedServiceURLs;
+    // 记录当前 ServiceInstance 发布的 URL 集合，其中 Key 是 ServiceKey（即 interface、group 和 version 三部分构成），Value 是对应的 URL 集合。
     private transient ConcurrentNavigableMap<String, SortedSet<URL>> exportedServiceURLs;
     private transient ExtensionLoader<MetadataParamsFilter> loader;
 

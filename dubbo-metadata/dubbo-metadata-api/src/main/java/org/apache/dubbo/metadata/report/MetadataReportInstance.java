@@ -36,6 +36,9 @@ import static org.apache.dubbo.common.utils.StringUtils.isEmpty;
 import static org.apache.dubbo.metadata.report.support.Constants.METADATA_REPORT_KEY;
 
 /**
+ * 单例对象，其中会获取 MetadataReportFactory 的适配器，并根据 init() 方法传入的 metadataReportURL
+ * 选择对应的 MetadataReportFactory 创建 MetadataReport 实例，这也是当前 Dubbo 进程全局唯一的 MetadataReport 实例。
+ *
  * Repository of MetadataReport instances that can talk to remote metadata server.
  *
  * MetadataReport instances are initiated during the beginning of deployer.start() and used by components that

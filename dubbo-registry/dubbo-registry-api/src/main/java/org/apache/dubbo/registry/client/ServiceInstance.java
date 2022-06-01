@@ -26,6 +26,8 @@ import java.util.Map;
 import java.util.SortedMap;
 
 /**
+ * Service Instance 唯一标识一个服务实例
+ *
  * The model class of an instance of a service, which is used for service registration and discovery.
  * <p>
  *
@@ -38,21 +40,21 @@ public interface ServiceInstance extends Serializable {
      *
      * @return non-null
      */
-    String getServiceName();
+    String getServiceName();    // 获取当前ServiceInstance所属的Service Name
 
     /**
      * The hostname of the registered service instance.
      *
      * @return non-null
      */
-    String getHost();
+    String getHost();    // 获取当前ServiceInstance的host
 
     /**
      * The port of the registered service instance.
      *
      * @return the positive integer if present
      */
-    int getPort();
+    int getPort();    // 获取当前ServiceInstance的port
 
     String getAddress();
 
@@ -62,7 +64,7 @@ public interface ServiceInstance extends Serializable {
      * @return if <code>true</code>, indicates current instance is enabled, or disable, the client should remove this one.
      * The default value is <code>true</code>
      */
-    default boolean isEnabled() {
+    default boolean isEnabled() {    // 当前 ServiceInstance 的状态
         return true;
     }
 
@@ -72,7 +74,7 @@ public interface ServiceInstance extends Serializable {
      * @return if <code>true</code>, indicates current instance is healthy, or unhealthy, the client may ignore this one.
      * The default value is <code>true</code>
      */
-    default boolean isHealthy() {
+    default boolean isHealthy() {    // 检测当前 ServiceInstance 的状态
         return true;
     }
 
@@ -81,7 +83,7 @@ public interface ServiceInstance extends Serializable {
      *
      * @return non-null, mutable and unsorted {@link Map}
      */
-    Map<String, String> getMetadata();
+    Map<String, String> getMetadata();    // 获取当前 ServiceInstance 关联的元数据，这些元数据以 KV 格式存储
 
     SortedMap<String, String> getSortedMetadata();
 

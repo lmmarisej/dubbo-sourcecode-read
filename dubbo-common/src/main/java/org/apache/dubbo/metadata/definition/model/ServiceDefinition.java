@@ -25,7 +25,9 @@ import java.util.List;
 import java.util.Objects;
 
 /**
- * 2015/1/27.
+ * Dubbo 元数据服务。
+ *
+ * 与我们业务中发布的 Dubbo 服务无异，Consumer 端可以调用一个 ServiceInstance 的元数据服务获取其发布的全部服务的元数据。
  */
 public class ServiceDefinition implements Serializable {
 
@@ -34,21 +36,21 @@ public class ServiceDefinition implements Serializable {
      *
      * @see Class#getCanonicalName()
      */
-    private String canonicalName;
+    private String canonicalName;       // 接口的完全限定名称。
 
     /**
      * the location of class file
      *
      * @see ClassUtils#getCodeSource(Class)
      */
-    private String codeSource;
+    private String codeSource;          // 服务接口所在的完整路径。
 
-    private List<MethodDefinition> methods;
+    private List<MethodDefinition> methods;     // 接口中定义的全部方法描述信息。
 
     /**
      * the definitions of type
      */
-    private List<TypeDefinition> types;
+    private List<TypeDefinition> types; // 接口定义中涉及的全部类型描述信息，包括方法的参数和字段，如果遇到复杂类型，TypeDefinition 会递归获取复杂类型内部的字段。
 
     /**
      * the definitions of annotations

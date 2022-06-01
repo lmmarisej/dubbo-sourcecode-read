@@ -19,7 +19,10 @@ package org.apache.dubbo.metadata.definition.model;
 import java.util.Map;
 
 /**
- * 2018/10/25
+ * 在服务发布的时候，会将服务的 URL 中的部分数据封装为 FullServiceDefinition 对象，然后作为元数据存储起来。
+ *
+ * FullServiceDefinition 继承了 ServiceDefinition，并在 ServiceDefinition 基础之上扩展了 params 集合（Map<String, String> 类型），
+ * 用来存储 URL 上的参数。
  */
 public class FullServiceDefinition extends ServiceDefinition {
 

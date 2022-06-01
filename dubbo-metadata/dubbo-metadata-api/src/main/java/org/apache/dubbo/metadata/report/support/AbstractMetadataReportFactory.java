@@ -28,6 +28,9 @@ import java.util.concurrent.locks.ReentrantLock;
 
 import static org.apache.dubbo.common.constants.CommonConstants.CHECK_KEY;
 
+/**
+ * 提供了缓存 MetadataReport 实现的功能，并定义了一个 createMetadataReport() 抽象方法供子类实现。
+ */
 public abstract class AbstractMetadataReportFactory implements MetadataReportFactory {
 
     private static final Logger logger = LoggerFactory.getLogger(AbstractMetadataReportFactory.class);
@@ -46,18 +49,20 @@ public abstract class AbstractMetadataReportFactory implements MetadataReportFac
 
     @Override
     public MetadataReport getMetadataReport(URL url) {
-        url = url.setPath(MetadataReport.class.getName())
+        url = url.setPath(MetadataReport.class.getName())        // 清理 export、refer 参数
             .removeParameters(EXPORT_KEY, REFER_KEY);
         String key = url.toServiceString();
 
+        // 从 SERVICE_STORE_MAP 集合（ConcurrentHashMap<String, MetadataReport> 类型）中查询是否已经缓存有对应的 MetadataReport 对象
         MetadataReport metadataReport = serviceStoreMap.get(key);
-        if (metadataReport != null) {
+        if (metadataReport != null) {       // 直接返回缓存的MetadataReport对象
             return metadataReport;
         }
 
         // Lock the metadata access process to ensure a single instance of the metadata instance
         lock.lock();
         try {
+            // 创建新的MetadataReport对象，createMetadataReport()方法由子类具体实现
             metadataReport = serviceStoreMap.get(key);
             if (metadataReport != null) {
                 return metadataReport;
@@ -77,7 +82,7 @@ public abstract class AbstractMetadataReportFactory implements MetadataReportFac
                 throw new IllegalStateException("Can not create metadata Report " + url);
             }
             if (metadataReport != null) {
-                serviceStoreMap.put(key, metadataReport);
+                serviceStoreMap.put(key, metadataReport);      // 将 MetadataReport 缓存到 serviceStoreMap 集合中
             }
             return metadataReport;
         } finally {

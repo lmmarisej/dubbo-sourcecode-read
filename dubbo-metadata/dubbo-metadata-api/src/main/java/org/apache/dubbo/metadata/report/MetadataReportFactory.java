@@ -24,8 +24,9 @@ import static org.apache.dubbo.common.constants.CommonConstants.PROTOCOL_KEY;
 import static org.apache.dubbo.metadata.report.MetadataReportFactory.DEFAULT;
 
 /**
+ * 扩展接口
  */
-@SPI(DEFAULT)
+@SPI(DEFAULT)       // Dubbo 默认使用 Redis 实现元数据中心。
 public interface MetadataReportFactory {
 
     String DEFAULT = "redis";
