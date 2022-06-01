@@ -151,7 +151,7 @@ public class DefaultModuleDeployer extends AbstractDeployer<ModuleModel> impleme
             }
 
             // refer services
-            referServices();             // 处理Consumer的ReferenceConfig
+            referServices();             // 处理Consumer的ReferenceConfig，服务引用
 
             // if no async export/refer services, just set started
             if (asyncExportingFutures.isEmpty() && asyncReferringFutures.isEmpty()) {
@@ -367,15 +367,15 @@ public class DefaultModuleDeployer extends AbstractDeployer<ModuleModel> impleme
     }
 
     private void referServices() {
-        configManager.getReferences().forEach(rc -> {
+        configManager.getReferences().forEach(rc -> {        // 遍历ReferenceConfig列表
             try {
                 ReferenceConfig<?> referenceConfig = (ReferenceConfig<?>) rc;
-                if (!referenceConfig.isRefreshed()) {
+                if (!referenceConfig.isRefreshed()) {       // 初始化
                     referenceConfig.refresh();
                 }
 
-                if (rc.shouldInit()) {
-                    if (referAsync || rc.shouldReferAsync()) {
+                if (rc.shouldInit()) {      // 检测ReferenceConfig是否已经初始化
+                    if (referAsync || rc.shouldReferAsync()) {      // 异步
                         ExecutorService executor = executorRepository.getServiceReferExecutor();
                         CompletableFuture<Void> future = CompletableFuture.runAsync(() -> {
                             try {
@@ -387,7 +387,7 @@ public class DefaultModuleDeployer extends AbstractDeployer<ModuleModel> impleme
 
                         asyncReferringFutures.add(future);
                     } else {
-                        referenceCache.get(rc);
+                        referenceCache.get(rc);     // 同步
                     }
                 }
             } catch (Throwable t) {

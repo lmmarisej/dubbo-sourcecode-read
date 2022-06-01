@@ -206,8 +206,13 @@ public abstract class AbstractInterfaceConfig extends AbstractMethodConfig {
 
     /**
      * The url of the reference service
+     *
+     * Dubbo 支持直连 Provider和依赖注册中心两种服务引用方式。
+     *
+     * 如果是直连服务的模式，我们可以通过 url 参数指定一个或者多个 Provider 地址，会被解析并填充到 urls 集合；
+     * 如果通过注册中心的方式进行服务引用，则会调用 loadRegistries() 方法加载所有注册中心。
      */
-    protected final List<URL> urls = new ArrayList<URL>();
+    protected final List<URL> urls = new ArrayList<>();
 
     public List<URL> getExportedUrls() {
         return urls;

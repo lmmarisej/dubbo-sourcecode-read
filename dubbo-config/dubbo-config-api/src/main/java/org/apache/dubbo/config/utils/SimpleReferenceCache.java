@@ -51,7 +51,7 @@ public class SimpleReferenceCache implements ReferenceCache {
      */
     public static final KeyGenerator DEFAULT_KEY_GENERATOR = referenceConfig -> {
         String iName = referenceConfig.getInterface();
-        if (StringUtils.isBlank(iName)) {
+        if (StringUtils.isBlank(iName)) {        // 获取服务接口名称
             Class<?> clazz = referenceConfig.getInterfaceClass();
             iName = clazz.getName();
         }
@@ -234,8 +234,8 @@ public class SimpleReferenceCache implements ReferenceCache {
      */
     @Override
     public <T> void destroy(ReferenceConfigBase<T> referenceConfig) {
-        String key = generator.generateKey(referenceConfig);
-        Class<?> type = referenceConfig.getInterfaceClass();
+        String key = generator.generateKey(referenceConfig);          // 生成服务提供方对应的Key
+        Class<?> type = referenceConfig.getInterfaceClass();         // 获取接口类型
         destroy(key, type);
     }
 
@@ -279,6 +279,9 @@ public class SimpleReferenceCache implements ReferenceCache {
         return "ReferenceCache(name: " + name + ")";
     }
 
+    /**
+     * 用来修改缓存 Key 的生成逻辑
+     */
     public interface KeyGenerator {
         String generateKey(ReferenceConfigBase<?> referenceConfig);
     }

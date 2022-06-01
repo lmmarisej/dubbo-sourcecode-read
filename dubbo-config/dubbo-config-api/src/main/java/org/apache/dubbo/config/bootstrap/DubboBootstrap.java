@@ -579,7 +579,7 @@ public final class DubboBootstrap {
 
     public DubboBootstrap reference(ReferenceConfig<?> referenceConfig, ModuleModel moduleModel) {
         referenceConfig.setScopeModel(moduleModel);
-        moduleModel.getConfigManager().addReference(referenceConfig);
+        moduleModel.getConfigManager().addReference(referenceConfig);        // 添加到 ConfigManager 中进行管理
         return this;
     }
 

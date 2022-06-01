@@ -24,12 +24,7 @@ import org.apache.dubbo.common.extension.ExtensionLoader;
 import org.apache.dubbo.common.logger.Logger;
 import org.apache.dubbo.common.logger.LoggerFactory;
 import org.apache.dubbo.common.url.component.ServiceConfigURL;
-import org.apache.dubbo.common.utils.ArrayUtils;
-import org.apache.dubbo.common.utils.CollectionUtils;
-import org.apache.dubbo.common.utils.ConfigUtils;
-import org.apache.dubbo.common.utils.NetUtils;
-import org.apache.dubbo.common.utils.StringUtils;
-import org.apache.dubbo.common.utils.UrlUtils;
+import org.apache.dubbo.common.utils.*;
 import org.apache.dubbo.config.annotation.Reference;
 import org.apache.dubbo.config.support.Parameter;
 import org.apache.dubbo.config.utils.ConfigValidationUtils;
@@ -42,38 +37,15 @@ import org.apache.dubbo.rpc.cluster.Cluster;
 import org.apache.dubbo.rpc.cluster.directory.StaticDirectory;
 import org.apache.dubbo.rpc.cluster.support.ClusterUtils;
 import org.apache.dubbo.rpc.cluster.support.registry.ZoneAwareCluster;
-import org.apache.dubbo.rpc.model.AsyncMethodInfo;
-import org.apache.dubbo.rpc.model.ConsumerModel;
-import org.apache.dubbo.rpc.model.ModuleModel;
-import org.apache.dubbo.rpc.model.ModuleServiceRepository;
-import org.apache.dubbo.rpc.model.ScopeModel;
-import org.apache.dubbo.rpc.model.ServiceDescriptor;
+import org.apache.dubbo.rpc.model.*;
 import org.apache.dubbo.rpc.protocol.injvm.InjvmProtocol;
 import org.apache.dubbo.rpc.service.GenericService;
 import org.apache.dubbo.rpc.stub.StubSuppliers;
 import org.apache.dubbo.rpc.support.ProtocolUtils;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
-import static org.apache.dubbo.common.constants.CommonConstants.ANY_VALUE;
-import static org.apache.dubbo.common.constants.CommonConstants.CLUSTER_KEY;
-import static org.apache.dubbo.common.constants.CommonConstants.COMMA_SEPARATOR;
-import static org.apache.dubbo.common.constants.CommonConstants.COMMA_SEPARATOR_CHAR;
-import static org.apache.dubbo.common.constants.CommonConstants.CONSUMER_SIDE;
-import static org.apache.dubbo.common.constants.CommonConstants.INTERFACE_KEY;
-import static org.apache.dubbo.common.constants.CommonConstants.LOCALHOST_VALUE;
-import static org.apache.dubbo.common.constants.CommonConstants.METHODS_KEY;
-import static org.apache.dubbo.common.constants.CommonConstants.MONITOR_KEY;
-import static org.apache.dubbo.common.constants.CommonConstants.PROXY_CLASS_REF;
-import static org.apache.dubbo.common.constants.CommonConstants.REVISION_KEY;
-import static org.apache.dubbo.common.constants.CommonConstants.SEMICOLON_SPLIT_PATTERN;
-import static org.apache.dubbo.common.constants.CommonConstants.SIDE_KEY;
+import static org.apache.dubbo.common.constants.CommonConstants.*;
 import static org.apache.dubbo.common.constants.RegistryConstants.SUBSCRIBED_SERVICE_NAMES_KEY;
 import static org.apache.dubbo.common.utils.NetUtils.isInvalidLocalHost;
 import static org.apache.dubbo.common.utils.StringUtils.splitToSet;
@@ -86,6 +58,10 @@ import static org.apache.dubbo.rpc.cluster.Constants.PEER_KEY;
 import static org.apache.dubbo.rpc.cluster.Constants.REFER_KEY;
 
 /**
+ * 服务引用的真正入口，服务引用的核心实现在 ReferenceConfig 之中。
+ * <p>
+ * 一个 ReferenceConfig 对象对应一个服务接口，每个 ReferenceConfig 对象中都封装了与注册中心的网络连接，以及与 Provider 的网络连接。
+ * <p>
  * Please avoid using this class for any new application,
  * use {@link ReferenceConfigBase} instead.
  */
@@ -112,6 +88,8 @@ public class ReferenceConfig<T> extends ReferenceConfigBase<T> {
     /**
      * A {@link ProxyFactory} implementation that will generate a reference service's proxy,the JavassistProxyFactory is
      * its default implementation
+     * <p>
+     * 适配器，选择合适的 ProxyFactory 扩展实现，将 Invoker 包装成服务接口的代理对象。
      */
     private ProxyFactory proxyFactory;
 
@@ -120,7 +98,7 @@ public class ReferenceConfig<T> extends ReferenceConfigBase<T> {
     /**
      * The interface proxy reference
      */
-    private transient volatile T ref;
+    private transient volatile T ref;        // ref 指向了服务的代理对象
 
     /**
      * The invoker of the reference service
@@ -206,7 +184,7 @@ public class ReferenceConfig<T> extends ReferenceConfigBase<T> {
 
     @Override
     public T get() {
-        if (destroyed) {
+        if (destroyed) {         // 检测当前ReferenceConfig状态
             throw new IllegalStateException("The invoker of ReferenceConfig(" + url + ") has already destroyed!");
         }
 
@@ -216,7 +194,7 @@ public class ReferenceConfig<T> extends ReferenceConfigBase<T> {
 
             synchronized (this) {
                 if (ref == null) {
-                    init();
+                    init();             // 初始化 ref 字段
                 }
             }
         }
@@ -246,8 +224,11 @@ public class ReferenceConfig<T> extends ReferenceConfigBase<T> {
         }
     }
 
+    /**
+     * 对服务引用的配置进行处理，以保证配置的正确性。
+     */
     protected synchronized void init() {
-        if (initialized) {
+        if (initialized) {      // 检测ReferenceConfig的初始化状态
             return;
         }
         initialized = true;
@@ -263,14 +244,14 @@ public class ReferenceConfig<T> extends ReferenceConfigBase<T> {
         // TODO, uncomment this line once service key is unified
         serviceMetadata.setServiceKey(URL.buildKey(interfaceName, group, version));
 
-        Map<String, String> referenceParameters = appendConfig();
+        Map<String, String> referenceParameters = appendConfig();       // 省略其他配置的检查
         // init service-application mapping
         initServiceAppsMapping(referenceParameters);
 
         ModuleServiceRepository repository = getScopeModel().getServiceRepository();
         ServiceDescriptor serviceDescriptor;
         if (CommonConstants.NATIVE_STUB.equals(getProxy())) {
-            serviceDescriptor = StubSuppliers.getServiceDescriptor(interfaceName);
+            serviceDescriptor = StubSuppliers.getServiceDescriptor(interfaceName);       // 添加interface参数
             repository.registerService(serviceDescriptor);
         } else {
             serviceDescriptor = repository.registerService(interfaceClass);
@@ -282,7 +263,7 @@ public class ReferenceConfig<T> extends ReferenceConfigBase<T> {
 
         serviceMetadata.getAttachments().putAll(referenceParameters);
 
-        ref = createProxy(referenceParameters);
+        ref = createProxy(referenceParameters);     // 创建代理
 
         serviceMetadata.setTarget(ref);
         serviceMetadata.addAttribute(PROXY_CLASS_REF, ref);
@@ -328,9 +309,9 @@ public class ReferenceConfig<T> extends ReferenceConfigBase<T> {
         Map<String, String> map = new HashMap<>(16);
 
         map.put(INTERFACE_KEY, interfaceName);
-        map.put(SIDE_KEY, CONSUMER_SIDE);
+        map.put(SIDE_KEY, CONSUMER_SIDE);           // 添加side参数
 
-        ReferenceConfigBase.appendRuntimeParameters(map);
+        ReferenceConfigBase.appendRuntimeParameters(map);         // 添加Dubbo版本、release参数、timestamp参数、pid参数
 
         if (!ProtocolUtils.isGeneric(generic)) {
             String revision = Version.getVersion(interfaceClass, version);
@@ -361,7 +342,7 @@ public class ReferenceConfig<T> extends ReferenceConfigBase<T> {
                 "Specified invalid registry ip from property:" + DUBBO_IP_TO_REGISTRY + ", value:" + hostToRegistry);
         }
 
-        map.put(REGISTER_IP_KEY, hostToRegistry);
+        map.put(REGISTER_IP_KEY, hostToRegistry);        // 添加 ip 参数
 
         if (CollectionUtils.isNotEmpty(getMethods())) {
             for (MethodConfig methodConfig : getMethods()) {
@@ -379,22 +360,28 @@ public class ReferenceConfig<T> extends ReferenceConfigBase<T> {
         return map;
     }
 
+    /**
+     * 处理了多种服务引用的场景，例如，直连单个/多个Provider、单个/多个注册中心。
+     * <p>
+     * 1.一是通过 Protocol 适配器选择合适的 Protocol 扩展实现创建 Invoker 对象；
+     * 2.二是通过 ProxyFactory 适配器选择合适的 ProxyFactory 创建代理对象。
+     */
     @SuppressWarnings({"unchecked"})
     private T createProxy(Map<String, String> referenceParameters) {
-        if (shouldJvmRefer(referenceParameters)) {
+        if (shouldJvmRefer(referenceParameters)) {  // 根据传入的参数集合判断协议是否为 injvm 协议，如果是，直接通过 InjvmProtocol 引用服务。
             createInvokerForLocal(referenceParameters);
         } else {
             urls.clear();
             if (StringUtils.isNotEmpty(url)) {
                 // user specified URL, could be peer-to-peer address, or register center's address.
-                parseUrl(referenceParameters);
+                parseUrl(referenceParameters);      // url 参数解析
             } else {
                 // if protocols not in jvm checkRegistry
                 if (!LOCAL_PROTOCOL.equalsIgnoreCase(getProtocol())) {
                     aggregateUrlFromRegistry(referenceParameters);
                 }
             }
-            createInvokerForRemote();
+            createInvokerForRemote();       // 远程 invoker
         }
 
         if (logger.isInfoEnabled()) {
@@ -403,13 +390,19 @@ public class ReferenceConfig<T> extends ReferenceConfigBase<T> {
                     " it's GenericService reference" : " it's not GenericService reference"));
         }
 
-        URL consumerUrl = new ServiceConfigURL(CONSUMER_PROTOCOL, referenceParameters.get(REGISTER_IP_KEY), 0,
-            referenceParameters.get(INTERFACE_KEY), referenceParameters);
+        URL consumerUrl = new ServiceConfigURL(        // 元数据处理相关的逻辑
+            CONSUMER_PROTOCOL,
+            referenceParameters.get(REGISTER_IP_KEY),
+            0,
+            referenceParameters.get(INTERFACE_KEY),
+            referenceParameters
+        );
         consumerUrl = consumerUrl.setScopeModel(getScopeModel());
         consumerUrl = consumerUrl.setServiceModel(consumerModel);
         MetadataUtils.publishServiceDefinition(consumerUrl, consumerModel.getServiceModel(), getApplicationModel());
 
         // create service proxy
+        // 通过ProxyFactory适配器选择合适的ProxyFactory扩展实现，创建代理对象
         return (T) proxyFactory.getProxy(invoker, ProtocolUtils.isGeneric(generic));
     }
 
@@ -438,19 +431,22 @@ public class ReferenceConfig<T> extends ReferenceConfigBase<T> {
      * Parse the directly configured url.
      */
     private void parseUrl(Map<String, String> referenceParameters) {
-        String[] us = SEMICOLON_SPLIT_PATTERN.split(url);
-        if (ArrayUtils.isNotEmpty(us)) {
+        String[] us = SEMICOLON_SPLIT_PATTERN.split(url);       // 配置多个URL的时候，会用分号进行切分
+        if (ArrayUtils.isNotEmpty(us)) {        // url不为空，表明用户可能想进行点对点调用
             for (String u : us) {
                 URL url = URL.valueOf(u);
                 if (StringUtils.isEmpty(url.getPath())) {
-                    url = url.setPath(interfaceName);
+                    url = url.setPath(interfaceName);        // 设置接口完全限定名为URL Path
                 }
                 url = url.setScopeModel(getScopeModel());
                 url = url.setServiceModel(consumerModel);
-                if (UrlUtils.isRegistry(url)) {
-                    urls.add(url.putAttribute(REFER_KEY, referenceParameters));
+                if (UrlUtils.isRegistry(url)) {     // 检测 URL 协议是否为 registry，若是，说明用户想使用指定的注册中心
+                    // 这里会将 map 中的参数整理成一个参数添加到 refer 参数中
+                    urls.add(url.putAttribute(REFER_KEY, referenceParameters));      // 将map中的参数添加到url中
                 } else {
-                    URL peerUrl = getScopeModel().getApplicationModel().getBeanFactory().getBean(ClusterUtils.class).mergeUrl(url, referenceParameters);
+                    URL peerUrl = getScopeModel().getApplicationModel().getBeanFactory()
+                        .getBean(ClusterUtils.class)
+                        .mergeUrl(url, referenceParameters);
                     peerUrl = peerUrl.putAttribute(PEER_KEY, true);
                     urls.add(peerUrl);
                 }
@@ -486,26 +482,29 @@ public class ReferenceConfig<T> extends ReferenceConfigBase<T> {
 
     /**
      * Make a remote reference, create a remote reference invoker
+     * <p>
+     * 通过 Protocol 的适配器选择对应的Protocol实现创建Invoker对象
      */
     @SuppressWarnings({"unchecked", "rawtypes"})
     private void createInvokerForRemote() {
-        if (urls.size() == 1) {
+        if (urls.size() == 1) {   // 在单注册中心或是直连单个服务提供方的时候，通过 Protocol 的适配器选择对应的 Protocol 实现创建 Invoker 对象
             URL curUrl = urls.get(0);
             invoker = protocolSPI.refer(interfaceClass, curUrl);
             if (!UrlUtils.isRegistry(curUrl)) {
-                List<Invoker<?>> invokers = new ArrayList<>();
+                List<Invoker<?>> invokers = new ArrayList<>();  // 多注册中心或是直连多个服务提供方的时候，会根据每个 URL 创建 Invoker 对象
                 invokers.add(invoker);
+                // 在单注册中心或是直连单个服务提供方的时候，通过Protocol的适配器选择对应的Protocol实现创建Invoker对象
                 invoker = Cluster.getCluster(scopeModel, Cluster.DEFAULT).join(new StaticDirectory(curUrl, invokers), true);
             }
         } else {
-            List<Invoker<?>> invokers = new ArrayList<>();
+            List<Invoker<?>> invokers = new ArrayList<>(); // 多注册中心或是直连多个服务提供方的时候，会根据每个 URL 创建 Invoker 对象
             URL registryUrl = null;
             for (URL url : urls) {
                 // For multi-registry scenarios, it is not checked whether each referInvoker is available.
                 // Because this invoker may become available later.
                 invokers.add(protocolSPI.refer(interfaceClass, url));
 
-                if (UrlUtils.isRegistry(url)) {
+                if (UrlUtils.isRegistry(url)) {     // 确定是多注册中心，还是直连多个 Provider
                     // use last registry url
                     registryUrl = url;
                 }
@@ -514,10 +513,12 @@ public class ReferenceConfig<T> extends ReferenceConfigBase<T> {
             if (registryUrl != null) {
                 // registry url is available
                 // for multi-subscription scenario, use 'zone-aware' policy by default
+                // urls 集合中有多个注册中心，则使用 ZoneAwareCluster 作为 Cluster 的默认实现，生成对应的 Invoker 对象
                 String cluster = registryUrl.getParameter(CLUSTER_KEY, ZoneAwareCluster.NAME);
                 // The invoker wrap sequence would be: ZoneAwareClusterInvoker(StaticDirectory) -> FailoverClusterInvoker
                 // (RegistryDirectory, routing happens here) -> Invoker
-                invoker = Cluster.getCluster(registryUrl.getScopeModel(), cluster, false).join(new StaticDirectory(registryUrl, invokers), false);
+                invoker = Cluster.getCluster(registryUrl.getScopeModel(), cluster, false)
+                    .join(new StaticDirectory(registryUrl, invokers), false);
             } else {
                 // not a registry url, must be direct invoke.
                 if (CollectionUtils.isEmpty(invokers)) {
@@ -525,13 +526,14 @@ public class ReferenceConfig<T> extends ReferenceConfigBase<T> {
                 }
                 URL curUrl = invokers.get(0).getUrl();
                 String cluster = curUrl.getParameter(CLUSTER_KEY, Cluster.DEFAULT);
+                // 多个Provider直连的场景中，使用Cluster适配器选择合适的扩展实现
                 invoker = Cluster.getCluster(scopeModel, cluster).join(new StaticDirectory(curUrl, invokers), true);
             }
         }
     }
 
     private void checkInvokerAvailable() throws IllegalStateException {
-        if (shouldCheck() && !invoker.isAvailable()) {
+        if (shouldCheck() && !invoker.isAvailable()) {        // 根据check配置决定是否检测Provider的可用性
             invoker.destroy();
             throw new IllegalStateException("Failed to check the status of the service "
                 + interfaceName
