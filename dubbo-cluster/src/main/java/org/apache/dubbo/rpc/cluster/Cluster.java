@@ -33,7 +33,7 @@ import org.apache.dubbo.rpc.model.ScopeModelUtil;
  * <a href="http://en.wikipedia.org/wiki/Fault-tolerant_system">Fault-Tolerant</a>
  *
  */
-@SPI(Cluster.DEFAULT)
+@SPI(Cluster.DEFAULT)       // 默认实现是 FailoverCluster
 public interface Cluster {
 
     String DEFAULT = "failover";

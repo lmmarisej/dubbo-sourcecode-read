@@ -26,8 +26,8 @@ import org.apache.dubbo.rpc.cluster.LoadBalance;
 import java.util.List;
 
 /**
- * AvailableClusterInvoker
- *
+ * 逐个调用对应的 Provider 节点，当遇到第一个可用的 Provider 节点时，就尝试访问该 Provider 节点，成功则返回结果；
+ * 如果访问失败，则抛出异常终止遍历。
  */
 public class AvailableClusterInvoker<T> extends AbstractClusterInvoker<T> {
 
@@ -37,9 +37,9 @@ public class AvailableClusterInvoker<T> extends AbstractClusterInvoker<T> {
 
     @Override
     public Result doInvoke(Invocation invocation, List<Invoker<T>> invokers, LoadBalance loadbalance) throws RpcException {
-        for (Invoker<T> invoker : invokers) {
-            if (invoker.isAvailable()) {
-                return invokeWithContext(invoker, invocation);
+        for (Invoker<T> invoker : invokers) {       // 遍历整个 Invoker 集合
+            if (invoker.isAvailable()) {        // 检测该 Invoker 是否可用
+                return invokeWithContext(invoker, invocation);         // 发起请求，调用失败时的异常会直接抛出
             }
         }
         throw new RpcException("No provider available in " + invokers);

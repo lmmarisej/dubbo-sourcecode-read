@@ -40,6 +40,8 @@ import static org.apache.dubbo.common.constants.RegistryConstants.REGISTRY_ZONE_
 import static org.apache.dubbo.common.constants.RegistryConstants.ZONE_KEY;
 
 /**
+ * Consumer 可以使用 ZoneAwareClusterInvoker 先在多个注册中心之间进行选择，选定注册中心之后，再选择 Provider 节点
+ *
  * When there are more than one registry for subscription.
  * <p>
  * This extension provides a strategy to decide how to distribute traffics among them:
@@ -66,6 +68,7 @@ public class ZoneAwareClusterInvoker<T> extends AbstractClusterInvoker<T> {
     @SuppressWarnings({"unchecked", "rawtypes"})
     public Result doInvoke(Invocation invocation, final List<Invoker<T>> invokers, LoadBalance loadbalance) throws RpcException {
         // First, pick the invoker (XXXClusterInvoker) that comes from the local registry, distinguish by a 'preferred' key.
+        // 首先找到preferred属性为true的注册中心，它是优先级最高的注册中心，只有该中心无可用 Provider 节点时，才会回落到其他注册中心
         for (Invoker<T> invoker : invokers) {
             ClusterInvoker<T> clusterInvoker = (ClusterInvoker<T>) invoker;
             if (clusterInvoker.isAvailable() && clusterInvoker.getRegistryUrl()
@@ -75,6 +78,7 @@ public class ZoneAwareClusterInvoker<T> extends AbstractClusterInvoker<T> {
         }
 
         RpcContext rpcContext = RpcContext.getClientAttachment();
+        // 根据请求中的registry_zone做匹配，优先派发到相同zone的注册中心
         String zone = rpcContext.getAttachment(REGISTRY_ZONE);
         String force = rpcContext.getAttachment(REGISTRY_ZONE_FORCE);
         if (StringUtils.isEmpty(zone) && zoneDetector != null) {
@@ -99,12 +103,14 @@ public class ZoneAwareClusterInvoker<T> extends AbstractClusterInvoker<T> {
 
 
         // load balance among all registries, with registry weight count in.
+        // 根据权重（也就是注册中心配置的weight属性）进行轮询
         Invoker<T> balancedInvoker = select(loadbalance, invocation, invokers, null);
         if (balancedInvoker!=null && balancedInvoker.isAvailable()) {
             return balancedInvoker.invoke(invocation);
         }
 
         // If none of the invokers has a preferred signal or is picked by the loadbalancer, pick the first one available.
+        // 选择第一个可用的 Provider 节点
         for (Invoker<T> invoker : invokers) {
             ClusterInvoker<T> clusterInvoker = (ClusterInvoker<T>) invoker;
             if (clusterInvoker.isAvailable()) {

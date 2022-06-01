@@ -38,6 +38,8 @@ import static org.apache.dubbo.common.constants.CommonConstants.DEFAULT_RETRIES;
 import static org.apache.dubbo.common.constants.CommonConstants.RETRIES_KEY;
 
 /**
+ * FailoverClusterInvoker 会在调用失败的时候，自动切换 Invoker 进行重试。
+ *
  * When invoke fails, log the initial error and retry other invokers (retry n times, which means at most n different invokers will be invoked)
  * Note that retry causes latency.
  * <p>
@@ -56,28 +58,29 @@ public class FailoverClusterInvoker<T> extends AbstractClusterInvoker<T> {
     @SuppressWarnings({"unchecked", "rawtypes"})
     public Result doInvoke(Invocation invocation, final List<Invoker<T>> invokers, LoadBalance loadbalance) throws RpcException {
         List<Invoker<T>> copyInvokers = invokers;
-        checkInvokers(copyInvokers, invocation);
+        checkInvokers(copyInvokers, invocation);            // 检查copyInvokers集合是否为空，如果为空会抛出异常
         String methodName = RpcUtils.getMethodName(invocation);
-        int len = calculateInvokeTimes(methodName);
+        int len = calculateInvokeTimes(methodName);      // 参数重试次数，默认重试2次，总共执行3次
         // retry loop.
         RpcException le = null; // last exception.
-        List<Invoker<T>> invoked = new ArrayList<Invoker<T>>(copyInvokers.size()); // invoked invokers.
-        Set<String> providers = new HashSet<String>(len);
+        List<Invoker<T>> invoked = new ArrayList<>(copyInvokers.size()); // invoked invokers.   // 记录已经尝试调用过的 Invoker 对象
+        Set<String> providers = new HashSet<>(len);
         for (int i = 0; i < len; i++) {
             //Reselect before retry to avoid a change of candidate `invokers`.
             //NOTE: if `invokers` changed, then `invoked` also lose accuracy.
-            if (i > 0) {
+            if (i > 0) {        // 第一次传进来的 invokers 已经 check 过了，第二次则是重试，需要重新获取最新的服务列表
                 checkWhetherDestroyed();
-                copyInvokers = list(invocation);
+                copyInvokers = list(invocation);            // 这里会重新调用 Directory.list() 方法，获取 Invoker 列表
                 // check again
-                checkInvokers(copyInvokers, invocation);
+                checkInvokers(copyInvokers, invocation);    // 检查 copyInvokers 集合是否为空，如果为空会抛出异常
             }
+            // 通过 LoadBalance 选择 Invoker 对象，这里传入的 invoked 集合，就是前面介绍 AbstractClusterInvoker.select() 方法中的 selected 集合
             Invoker<T> invoker = select(loadbalance, invocation, copyInvokers, invoked);
-            invoked.add(invoker);
+            invoked.add(invoker);           // 记录此次要尝试调用的Invoker对象，下一次重试时就会过滤这个服务
             RpcContext.getServiceContext().setInvokers((List) invoked);
             boolean success = false;
             try {
-                Result result = invokeWithContext(invoker, invocation);
+                Result result = invokeWithContext(invoker, invocation);  // 调用目标Invoker对象的invoke()方法，完成远程调用
                 if (le != null && logger.isWarnEnabled()) {
                     logger.warn("Although retry the method " + methodName
                             + " in the service " + getInterface().getName()
@@ -97,10 +100,10 @@ public class FailoverClusterInvoker<T> extends AbstractClusterInvoker<T> {
                 }
                 le = e;
             } catch (Throwable e) {
-                le = new RpcException(e.getMessage(), e);
+                le = new RpcException(e.getMessage(), e);       // 抛出异常，表示此次尝试失败，会进行重试
             } finally {
                 if (!success) {
-                    providers.add(invoker.getUrl().getAddress());
+                    providers.add(invoker.getUrl().getAddress());       // 记录尝试过的Provider地址，会在上面的警告日志中打印出来
                 }
             }
         }
