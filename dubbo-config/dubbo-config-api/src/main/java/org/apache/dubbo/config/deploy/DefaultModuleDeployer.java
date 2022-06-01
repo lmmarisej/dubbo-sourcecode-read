@@ -139,10 +139,10 @@ public class DefaultModuleDeployer extends AbstractDeployer<ModuleModel> impleme
 
             // initialize
             applicationDeployer.initialize();
-            initialize();
+            initialize();           // 初始化一些基础组件，例如，配置中心相关组件、事件监听、元数据相关组件
 
             // export services
-            exportServices();
+            exportServices();        // 重点：发布服务
 
             // prepare application instance
             // exclude internal module to avoid wait itself
@@ -151,13 +151,13 @@ public class DefaultModuleDeployer extends AbstractDeployer<ModuleModel> impleme
             }
 
             // refer services
-            referServices();
+            referServices();             // 处理Consumer的ReferenceConfig
 
             // if no async export/refer services, just set started
             if (asyncExportingFutures.isEmpty() && asyncReferringFutures.isEmpty()) {
                 onModuleStarted();
             } else {
-                frameworkExecutorRepository.getSharedExecutor().submit(() -> {
+                frameworkExecutorRepository.getSharedExecutor().submit(() -> {    // 异步发布服务，会启动一个线程监听发布是否完成，完成之后会将ready设置为true
                     try {
                         // wait for export finish
                         waitExportFinish();
@@ -166,7 +166,7 @@ public class DefaultModuleDeployer extends AbstractDeployer<ModuleModel> impleme
                     } catch (Throwable e) {
                         logger.warn("wait for export/refer services occurred an exception", e);
                     } finally {
-                        onModuleStarted();
+                        onModuleStarted();      // 同步发布服务成功之后，会将ready设置为true
                     }
                 });
             }
@@ -308,21 +308,24 @@ public class DefaultModuleDeployer extends AbstractDeployer<ModuleModel> impleme
         moduleModel.getConfigManager().refreshAll();
     }
 
+    /**
+     * 服务发布核心逻辑的入口
+     */
     private void exportServices() {
-        for (ServiceConfigBase sc : configManager.getServices()) {
+        for (ServiceConfigBase sc : configManager.getServices()) {  // 从配置管理器中获取到所有的要暴露的服务配置，一个接口类对应一个ServiceConfigBase实例
             exportServiceInternal(sc);
         }
     }
 
     private void exportServiceInternal(ServiceConfigBase sc) {
-        ServiceConfig<?> serviceConfig = (ServiceConfig<?>) sc;
+        ServiceConfig<?> serviceConfig = (ServiceConfig<?>) sc;     // 每一个服务接口都会转换为对应的 ServiceConfig 实例
         if (!serviceConfig.isRefreshed()) {
             serviceConfig.refresh();
         }
         if (sc.isExported()) {
             return;
         }
-        if (exportAsync || sc.shouldExportAsync()) {
+        if (exportAsync || sc.shouldExportAsync()) {      // 异步模式，获取一个线程池来异步执行服务发布逻辑
             ExecutorService executor = executorRepository.getServiceExportExecutor();
             CompletableFuture<Void> future = CompletableFuture.runAsync(() -> {
                 try {
@@ -335,8 +338,8 @@ public class DefaultModuleDeployer extends AbstractDeployer<ModuleModel> impleme
                 }
             }, executor);
 
-            asyncExportingFutures.add(future);
-        } else {
+            asyncExportingFutures.add(future);    // 记录异步发布的 Future
+        } else {        // 同步发布
             if (!sc.isExported()) {
                 sc.export();
                 exportedServices.add(sc);

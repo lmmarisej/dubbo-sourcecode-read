@@ -38,12 +38,11 @@ import static org.apache.dubbo.rpc.Constants.SCOPE_LOCAL;
 import static org.apache.dubbo.rpc.Constants.SCOPE_REMOTE;
 
 /**
- * InjvmProtocol
+ * 本地发布
  */
 public class InjvmProtocol extends AbstractProtocol {
 
     public static final String NAME = LOCAL_PROTOCOL;
-
     public static final int DEFAULT_PORT = 0;
 
     public static InjvmProtocol getInjvmProtocol(ScopeModel scopeModel) {
@@ -107,11 +106,8 @@ public class InjvmProtocol extends AbstractProtocol {
         } else if (getExporter(exporterMap, url) != null) {
             // Broadcast cluster means that multiple machines will be called,
             // which is not converted to injvm protocol at this time.
-            if (BROADCAST_CLUSTER.equalsIgnoreCase(url.getParameter(CLUSTER_KEY))) {
-                return false;
-            }
+            return !BROADCAST_CLUSTER.equalsIgnoreCase(url.getParameter(CLUSTER_KEY));
             // by default, go through local reference if there's the service exposed locally
-            return true;
         } else {
             return false;
         }

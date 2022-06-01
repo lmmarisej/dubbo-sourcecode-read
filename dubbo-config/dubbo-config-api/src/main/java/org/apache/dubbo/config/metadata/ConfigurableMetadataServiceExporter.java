@@ -93,6 +93,9 @@ public class ConfigurableMetadataServiceExporter {
         return applicationModel.getApplicationConfigManager().getApplication().get();
     }
 
+    /**
+     * 发布使用的协议
+     */
     private ProtocolConfig generateMetadataProtocol() {
         // protocol always defaults to dubbo if not specified
         String specifiedProtocol = getSpecifiedProtocol();

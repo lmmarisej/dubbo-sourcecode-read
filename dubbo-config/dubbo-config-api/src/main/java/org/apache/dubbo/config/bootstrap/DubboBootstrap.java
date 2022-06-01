@@ -65,6 +65,8 @@ import java.util.function.Consumer;
 import static java.util.Collections.singletonList;
 
 /**
+ * 通过 API 启动 Provider 的方式会使用到 DubboBootstrap，在 Spring 与 Dubbo 集成的时候也是使用 DubboBootstrap 作为服务发布入口。
+ *
  * See {@link ApplicationModel} and {@link ExtensionLoader} for why this class is designed to be singleton.
  * <p>
  * The bootstrap class of Dubbo
@@ -157,6 +159,7 @@ public final class DubboBootstrap {
         ApplicationModel.reset();
     }
 
+    // 初始化DubboBootstrap对象
     private DubboBootstrap(ApplicationModel applicationModel) {
         this.applicationModel = applicationModel;
         configManager = applicationModel.getApplicationConfigManager();

@@ -188,6 +188,9 @@ public class ConfigValidationUtils {
 
     public static final String IPV6_END_MARK = "]";
 
+    /**
+     * 将 RegistryConfig 配置解析成 registryUrl。
+     */
     public static List<URL> loadRegistries(AbstractInterfaceConfig interfaceConfig, boolean provider) {
         // check && override if necessary
         List<URL> registryList = new ArrayList<>();

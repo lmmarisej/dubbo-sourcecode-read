@@ -100,6 +100,7 @@ public class DubboBootstrapApplicationListener implements ApplicationListener, A
     }
 
     private void onApplicationContextEvent(ApplicationContextEvent event) {
+        // 监听 ContextRefreshedEvent 事件和 ContextClosedEvent 事件
         if (DubboBootstrapStartStopListenerSpringAdapter.applicationContext == null) {
             DubboBootstrapStartStopListenerSpringAdapter.applicationContext = event.getApplicationContext();
         }
@@ -113,7 +114,7 @@ public class DubboBootstrapApplicationListener implements ApplicationListener, A
 
     private void onContextRefreshedEvent(ContextRefreshedEvent event) {
         if (bootstrap.getTakeoverMode() == BootstrapTakeoverMode.SPRING) {
-            moduleModel.getDeployer().start();
+            moduleModel.getDeployer().start();      // 启动 DubboBootstrap
         }
     }
 

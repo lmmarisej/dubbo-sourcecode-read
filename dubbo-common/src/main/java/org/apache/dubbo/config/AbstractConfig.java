@@ -162,6 +162,9 @@ public abstract class AbstractConfig implements Serializable {
         appendParameters0(parameters, config, null, false);
     }
 
+    /**
+     * 将 AbstractConfig 中的配置信息存储到 Map 集合中，后续在构造 URL 的时候，会将该集合中的 KV 作为 URL 的参数。
+     */
     private static void appendParameters0(Map<String, String> parameters, Object config, String prefix, boolean asParameters) {
         if (config == null) {
             return;
