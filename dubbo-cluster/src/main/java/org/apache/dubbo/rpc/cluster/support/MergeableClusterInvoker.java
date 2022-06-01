@@ -46,6 +46,9 @@ import static org.apache.dubbo.rpc.Constants.MERGER_KEY;
 
 /**
  * 对多个 Provider 节点返回结果合并。
+ *
+ * 如果 merger 参数以 "." 开头，则表示 "." 后的内容是一个方法名，这个方法名是远程目标方法的返回类型中的一个方法，
+ * MergeableClusterInvoker 在拿到所有 Invoker 返回的结果对象之后，会遍历每个返回结果，并调用 merger 参数指定的方法，合并这些结果值。
  */
 @SuppressWarnings("unchecked")
 public class MergeableClusterInvoker<T> extends AbstractClusterInvoker<T> {

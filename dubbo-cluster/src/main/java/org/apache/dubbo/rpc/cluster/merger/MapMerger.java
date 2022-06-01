@@ -25,14 +25,17 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Stream;
 
+/**
+ * 将多个 Set（或 List、Map）集合合并成一个 Set（或 List、Map）集合
+ */
 public class MapMerger implements Merger<Map<?, ?>> {
 
     @Override
     public Map<?, ?> merge(Map<?, ?>... items) {
-        if (ArrayUtils.isEmpty(items)) {
+        if (ArrayUtils.isEmpty(items)) {          // 空结果集时，这就返回空Map
             return Collections.emptyMap();
         }
-        Map<Object, Object> result = new HashMap<Object, Object>();
+        Map<Object, Object> result = new HashMap<>();     // 将 items 中所有 Map 集合中的 KV，添加到 result 这一个 Map 集合中
         Stream.of(items).filter(Objects::nonNull).forEach(result::putAll);
         return result;
     }

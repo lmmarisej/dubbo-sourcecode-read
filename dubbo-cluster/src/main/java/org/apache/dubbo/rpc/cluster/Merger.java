@@ -18,6 +18,10 @@ package org.apache.dubbo.rpc.cluster;
 
 import org.apache.dubbo.common.extension.SPI;
 
+/**
+ * 在 Dubbo 中提供了处理不同类型返回值的 Merger 实现，其中不仅有处理 boolean[]、byte[]、char[]、double[]、float[]、int[]、long[]、short[]
+ * 等基础类型数组的 Merger 实现，还有处理 List、Set、Map 等集合类的 Merger 实现
+ */
 @SPI
 public interface Merger<T> {
 

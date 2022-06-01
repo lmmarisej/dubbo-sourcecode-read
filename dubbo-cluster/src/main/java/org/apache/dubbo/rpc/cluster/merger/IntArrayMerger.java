@@ -23,14 +23,17 @@ import org.apache.dubbo.rpc.cluster.Merger;
 import java.util.Arrays;
 import java.util.Objects;
 
+/**
+ * 将相应类型的二维数组拍扁平化为同类型的一维数组
+ */
 public class IntArrayMerger implements Merger<int[]> {
 
     @Override
     public int[] merge(int[]... items) {
-        if (ArrayUtils.isEmpty(items)) {
+        if (ArrayUtils.isEmpty(items)) {              // 检测传入的多个int[]不能为空
             return new int[0];
         }
-        return Arrays.stream(items).filter(Objects::nonNull)
+        return Arrays.stream(items).filter(Objects::nonNull)    // 直接使用Stream的API将多个int[]数组扁平化成一个int[]数组
                 .flatMapToInt(Arrays::stream)
                 .toArray();
     }
