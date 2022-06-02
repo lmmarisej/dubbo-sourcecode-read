@@ -25,6 +25,10 @@ import java.util.Collections;
 import java.util.List;
 
 /**
+ * 通信双方遵守的约定。
+ *
+ *  RPC 接口代理类对象与 invoker 对象之间进行转换的接口。
+ *
  * Protocol. (API/SPI, Singleton, ThreadSafe)
  */
 @SPI(value = "dubbo", scope = ExtensionScope.FRAMEWORK)     // 默认使用 DubboProtocol 实现

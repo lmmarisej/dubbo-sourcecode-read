@@ -32,6 +32,8 @@ import static org.apache.dubbo.common.extension.ExtensionScope.APPLICATION;
 public interface ServiceInstanceCustomizer extends Prioritized {
 
     /**
+     * 自定义 ServiceInstance 信息，其中就包括控制 metadata 集合中的数据。
+     *
      * Customizes {@link ServiceInstance the service instance}
      *
      * @param serviceInstance {@link ServiceInstance the service instance}

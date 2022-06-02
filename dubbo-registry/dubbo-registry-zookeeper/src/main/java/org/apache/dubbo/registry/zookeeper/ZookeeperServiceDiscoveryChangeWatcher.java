@@ -37,6 +37,8 @@ import static org.apache.zookeeper.Watcher.Event.EventType.NodeChildrenChanged;
 import static org.apache.zookeeper.Watcher.Event.EventType.NodeDataChanged;
 
 /**
+ * 将 ZooKeeper 中的事件转换成了 Dubbo 内部的 ServiceInstancesChangedEvent 事件。
+ *
  * Zookeeper {@link ServiceDiscovery} Change {@link CuratorWatcher watcher} only interests in
  * {@link Watcher.Event.EventType#NodeChildrenChanged} and {@link Watcher.Event.EventType#NodeDataChanged} event types,
  * which will multicast a {@link ServiceInstancesChangedEvent} when the service node has been changed.
@@ -80,11 +82,12 @@ public class ZookeeperServiceDiscoveryChangeWatcher implements CuratorWatcher {
     public void process(WatchedEvent event) throws Exception {
         try {
             latch.await();
-        } catch (InterruptedException e) {
+        } catch (InterruptedException ignored) {
         }
 
-        Watcher.Event.EventType eventType = event.getType();
+        Watcher.Event.EventType eventType = event.getType();    // 获取监听到的事件类型
 
+        // 这里只关注 NodeChildrenChanged 和 NodeDataChanged 两种事件类型
         if (NodeChildrenChanged.equals(eventType) || NodeDataChanged.equals(eventType)) {
             if (shouldKeepWatching()) {
                 zookeeperServiceDiscovery.reRegisterWatcher(this);

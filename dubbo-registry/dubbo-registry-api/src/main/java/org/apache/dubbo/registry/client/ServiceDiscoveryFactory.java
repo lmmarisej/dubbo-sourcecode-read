@@ -23,6 +23,8 @@ import org.apache.dubbo.common.extension.SPI;
 import static org.apache.dubbo.common.extension.ExtensionScope.APPLICATION;
 
 /**
+ * 创建 ServiceDiscovery 对象的时候，会通过 ServiceDiscoveryFactory 工厂类进行创建。
+ *
  * The factory to create {@link ServiceDiscovery}
  *
  * @see ServiceDiscovery

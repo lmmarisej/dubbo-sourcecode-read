@@ -97,7 +97,7 @@ public abstract class AbstractServiceNameMapping implements ServiceNameMapping, 
 
         if (StringUtils.isNotEmpty(serviceNames)) {
             logger.info(key + " mapping to " + serviceNames + " instructed by provided-by set by user.");
-            subscribedServices.addAll(parseServices(serviceNames));
+            subscribedServices.addAll(parseServices(serviceNames));     // 解析provided-by参数值，得到全部的Service Name集合
         }
 
         if (isEmpty(subscribedServices)) {
@@ -129,7 +129,7 @@ public abstract class AbstractServiceNameMapping implements ServiceNameMapping, 
                 String registryServices = registryURL.getParameter(SUBSCRIBED_SERVICE_NAMES_KEY);
                 if (StringUtils.isNotEmpty(registryServices)) {
                     logger.info(subscribedURL.getServiceInterface() + " mapping to " + registryServices + " instructed by registry subscribed-services.");
-                    mappingServices = parseServices(registryServices);
+                    mappingServices = parseServices(registryServices);      // 解析provided-by参数值，得到全部的Service Name集合
                 }
             }
             if (CollectionUtils.isNotEmpty(mappingServices)) {

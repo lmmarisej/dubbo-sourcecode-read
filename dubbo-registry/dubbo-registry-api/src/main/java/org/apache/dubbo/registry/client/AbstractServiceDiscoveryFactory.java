@@ -36,6 +36,7 @@ import java.util.concurrent.ConcurrentMap;
 public abstract class AbstractServiceDiscoveryFactory implements ServiceDiscoveryFactory, ScopeModelAware {
 
     protected ApplicationModel applicationModel;
+    // 缓存 ServiceDiscovery 对象
     private final ConcurrentMap<String, ServiceDiscovery> discoveries = new ConcurrentHashMap<>();
 
     @Override
@@ -53,5 +54,5 @@ public abstract class AbstractServiceDiscoveryFactory implements ServiceDiscover
         return discoveries.computeIfAbsent(key, k -> createDiscovery(registryURL));
     }
 
-    protected abstract ServiceDiscovery createDiscovery(URL registryURL);
+    protected abstract ServiceDiscovery createDiscovery(URL registryURL);       // 创建 ServiceDiscovery 实例。
 }

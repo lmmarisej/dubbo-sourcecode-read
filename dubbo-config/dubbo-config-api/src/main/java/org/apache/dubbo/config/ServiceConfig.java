@@ -163,6 +163,7 @@ public class ServiceConfig<T> extends ServiceConfigBase<T> {
     public void init() {
         if (this.initialized.compareAndSet(false, true)) {
             // load ServiceListeners from extension
+            // 使用 Dubbo SPI 机制获取对应的 ServiceDiscovery 对象
             ExtensionLoader<ServiceListener> extensionLoader = this.getExtensionLoader(ServiceListener.class);
             this.serviceListeners.addAll(extensionLoader.getSupportedExtensionInstances());
         }

@@ -31,6 +31,8 @@ import java.util.Set;
 import static org.apache.dubbo.common.constants.CommonConstants.APPLICATION_KEY;
 
 /**
+ * 主要是对 ServiceInstance 中 metadata 这个 KV 集合进行自定义修改
+ *
  * <p>Intercepting instance to load instance-level params from different sources before being registered into registry.</p>
  *
  * The sources can be one or both of the following:
@@ -44,14 +46,12 @@ import static org.apache.dubbo.common.constants.CommonConstants.APPLICATION_KEY;
  *  <li>all keys specified by sources above</li>
  *  <li>keys found in metadata info</li>
  * </ul>
- *
- *
  */
 public class ServiceInstanceMetadataCustomizer implements ServiceInstanceCustomizer {
 
     @Override
     public void customize(ServiceInstance serviceInstance, ApplicationModel applicationModel) {
-        MetadataInfo metadataInfo = serviceInstance.getServiceMetadata();
+        MetadataInfo metadataInfo = serviceInstance.getServiceMetadata();     // 获取ServiceInstance对象的metadata字段
         if (metadataInfo == null || CollectionUtils.isEmptyMap(metadataInfo.getServices())) {
             return;
         }

@@ -35,6 +35,8 @@ import static org.apache.dubbo.registry.client.metadata.ServiceInstanceMetadataU
 import static org.apache.dubbo.registry.client.metadata.ServiceInstanceMetadataUtils.getMetadataServiceParameter;
 
 /**
+ * 主要是对 ServiceInstance URL 中 metadata 这个 KV 集合进行自定义修改
+ *
  * Used to interact with non-dubbo systems, also see {@link SpringCloudMetadataServiceURLBuilder}
  */
 public class MetadataServiceURLParamsMetadataCustomizer implements ServiceInstanceCustomizer {
@@ -42,8 +44,9 @@ public class MetadataServiceURLParamsMetadataCustomizer implements ServiceInstan
     @Override
     public void customize(ServiceInstance serviceInstance, ApplicationModel applicationModel) {
 
-        Map<String, String> metadata = serviceInstance.getMetadata();
+        Map<String, String> metadata = serviceInstance.getMetadata();    // 获取ServiceInstance对象的metadata字段
 
+        // 生成要添加到metadata集合的KV值
         String propertyName = resolveMetadataPropertyName(serviceInstance);
         String propertyValue = resolveMetadataPropertyValue(applicationModel);
 
@@ -53,12 +56,19 @@ public class MetadataServiceURLParamsMetadataCustomizer implements ServiceInstan
     }
 
     private String resolveMetadataPropertyName(ServiceInstance serviceInstance) {
-        return METADATA_SERVICE_URL_PARAMS_PROPERTY_NAME;
+        return METADATA_SERVICE_URL_PARAMS_PROPERTY_NAME;       // 返回 "dubbo.metadata-service.url-params" 固定字符串
     }
 
+    /**
+     * 返回 ApplicationModel 服务 URL 的参数。
+     */
     private String resolveMetadataPropertyValue(ApplicationModel applicationModel) {
         ModuleServiceRepository serviceRepository = applicationModel.getInternalModule().getServiceRepository();
-        String key = BaseServiceMetadata.buildServiceKey(MetadataService.class.getName(), applicationModel.getApplicationName(), MetadataService.VERSION);
+        String key = BaseServiceMetadata.buildServiceKey(
+            MetadataService.class.getName(),
+            applicationModel.getApplicationName(),
+            MetadataService.VERSION
+        );
         ProviderModel providerModel = serviceRepository.lookupExportedService(key);
         String metadataValue = "";
         if (providerModel != null) {

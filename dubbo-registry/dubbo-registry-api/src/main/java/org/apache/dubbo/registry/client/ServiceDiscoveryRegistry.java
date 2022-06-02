@@ -38,20 +38,18 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
-import static org.apache.dubbo.common.constants.CommonConstants.CHECK_KEY;
-import static org.apache.dubbo.common.constants.CommonConstants.INTERFACE_KEY;
-import static org.apache.dubbo.common.constants.CommonConstants.PROVIDER_SIDE;
-import static org.apache.dubbo.common.constants.RegistryConstants.REGISTRY_CLUSTER_KEY;
-import static org.apache.dubbo.common.constants.RegistryConstants.REGISTRY_TYPE_KEY;
-import static org.apache.dubbo.common.constants.RegistryConstants.SERVICE_REGISTRY_TYPE;
+import static org.apache.dubbo.common.constants.CommonConstants.*;
+import static org.apache.dubbo.common.constants.RegistryConstants.*;
 import static org.apache.dubbo.common.function.ThrowableAction.execute;
 import static org.apache.dubbo.common.utils.CollectionUtils.toTreeSet;
 import static org.apache.dubbo.metadata.ServiceNameMapping.toStringKeys;
 import static org.apache.dubbo.registry.client.ServiceDiscoveryFactory.getExtension;
 
 /**
+ * 将 ServiceDiscovery 接口的功能与 Registry 融合，ServiceDiscoveryRegistry 是一个面向服务实例（ServiceInstance）的注册中心实现。
+ * <p>
  * TODO, this bridge implementation is not necessary now, protocol can interact with service discovery directly.
- *
+ * <p>
  * ServiceDiscoveryRegistry is a very special Registry implementation, which is used to bridge the old interface-level service discovery model
  * with the new service discovery model introduced in 3.0 in a compatible manner.
  * <p>
@@ -68,11 +66,12 @@ public class ServiceDiscoveryRegistry extends FailbackRegistry {
 
     protected final Logger logger = LoggerFactory.getLogger(getClass());
 
-    private final ServiceDiscovery serviceDiscovery;
+    private final ServiceDiscovery serviceDiscovery;        // 用于 ServiceInstance 的发布和订阅。
 
-    private final AbstractServiceNameMapping serviceNameMapping;
+    private final AbstractServiceNameMapping serviceNameMapping;        // 用于 Service ID 与 Service Name 之间的转换。
 
     /* apps - listener */
+    // 记录了注册的 ServiceInstancesChangedListener
     private final Map<String, ServiceInstancesChangedListener> serviceListeners = new ConcurrentHashMap<>();
     private final Map<String, MappingListener> mappingListeners = new ConcurrentHashMap<>();
     /* This lock has the same scope and lifecycle as its corresponding instance listener.
@@ -82,8 +81,9 @@ public class ServiceDiscoveryRegistry extends FailbackRegistry {
     private final ConcurrentMap<String, Lock> appSubscriptionLocks = new ConcurrentHashMap<>();
 
     public ServiceDiscoveryRegistry(URL registryURL, ApplicationModel applicationModel) {
-        super(registryURL);
-        this.serviceDiscovery = createServiceDiscovery(registryURL);
+        super(registryURL); // 初始化父类，其中包括 FailbackRegistry 中的时间轮和重试定时任务以及 AbstractRegistry 中的本地文件缓存等
+        this.serviceDiscovery = createServiceDiscovery(registryURL);        // 初始化 ServiceDiscovery 对象
+        // 获取DefaultServiceNameMapping对象
         this.serviceNameMapping = (AbstractServiceNameMapping) ServiceNameMapping.getDefaultExtension(registryURL.getScopeModel());
         super.applicationModel = applicationModel;
     }
@@ -92,7 +92,7 @@ public class ServiceDiscoveryRegistry extends FailbackRegistry {
     protected ServiceDiscoveryRegistry(URL registryURL, ServiceDiscovery serviceDiscovery, ServiceNameMapping serviceNameMapping) {
         super(registryURL);
         this.serviceDiscovery = serviceDiscovery;
-        this.serviceNameMapping = (AbstractServiceNameMapping)serviceNameMapping;
+        this.serviceNameMapping = (AbstractServiceNameMapping) serviceNameMapping;
     }
 
     public ServiceDiscovery getServiceDiscovery() {
@@ -111,6 +111,8 @@ public class ServiceDiscoveryRegistry extends FailbackRegistry {
     }
 
     /**
+     * 加载 ServiceDiscovery 的相应实现
+     *
      * Get the instance {@link ServiceDiscovery} from the registry {@link URL} using
      * {@link ServiceDiscoveryFactory} SPI
      *
@@ -148,7 +150,7 @@ public class ServiceDiscoveryRegistry extends FailbackRegistry {
 
     @Override
     public final void register(URL url) {
-        if (!shouldRegister(url)) { // Should Not Register
+        if (!shouldRegister(url)) { // Should Not Register     // 检测URL中的side参数是否为provider
             return;
         }
         doRegister(url);
@@ -176,6 +178,9 @@ public class ServiceDiscoveryRegistry extends FailbackRegistry {
         serviceDiscovery.unregister(url);
     }
 
+    /**
+     * 失败策略订阅该 URL
+     */
     @Override
     public final void subscribe(URL url, NotifyListener listener) {
         if (!shouldSubscribe(url)) { // Should Not Subscribe
@@ -196,7 +201,7 @@ public class ServiceDiscoveryRegistry extends FailbackRegistry {
         Lock mappingLock = serviceNameMapping.getMappingLock(key);
         try {
             mappingLock.lock();
-            Set<String> subscribedServices = serviceNameMapping.getCachedMapping(url);
+            Set<String> subscribedServices = serviceNameMapping.getCachedMapping(url);      // 当前订阅的服务名称。
             try {
                 MappingListener mappingListener = new DefaultMappingListener(url, subscribedServices, listener);
                 subscribedServices = serviceNameMapping.getAndListen(this.getUrl(), url, mappingListener);
@@ -213,7 +218,7 @@ public class ServiceDiscoveryRegistry extends FailbackRegistry {
                 return;
             }
 
-            subscribeURLs(url, listener, subscribedServices);
+            subscribeURLs(url, listener, subscribedServices);       // 给需要订阅 URL 的服务添加监听器
         } finally {
             mappingLock.unlock();
         }
@@ -330,7 +335,7 @@ public class ServiceDiscoveryRegistry extends FailbackRegistry {
     }
 
     /**
-     * Supports or not ?
+     * 是否支持该类型的 URL
      *
      * @param registryURL the {@link URL url} of registry
      * @return if supported, return <code>true</code>, or <code>false</code>

@@ -59,7 +59,7 @@ public abstract class CuratorFrameworkUtils {
     }
 
     public static CuratorFramework buildCuratorFramework(URL connectionURL) throws Exception {
-        CuratorFramework curatorFramework = CuratorFrameworkFactory.builder()
+        CuratorFramework curatorFramework = CuratorFrameworkFactory.builder()       // // 省略初始化EventDispatcher的相关逻辑
             .connectString(connectionURL.getBackupAddress())
             .retryPolicy(buildRetryPolicy(connectionURL))
             .build();
@@ -99,13 +99,19 @@ public abstract class CuratorFrameworkUtils {
         return serviceInstance;
     }
 
+    /**
+     * 根据 ServiceInstance.metadata 携带的 URL 参数、Service Name、ServiceInstance 的 host 等信息构造 MetadataService 服务对应 ZookeeperInstance
+     */
     public static org.apache.curator.x.discovery.ServiceInstance<ZookeeperInstance> build(ServiceInstance serviceInstance) {
         ServiceInstanceBuilder builder;
-        String serviceName = serviceInstance.getServiceName();
+        String serviceName = serviceInstance.getServiceName();         // 获取Service Name
         String host = serviceInstance.getHost();
         int port = serviceInstance.getPort();
+        // 从metadata集合中获取"dubbo.metadata-service.url-params"这个Key对应的Value值， 这个Key是在
+        // MetadataServiceURLParamsMetadataCustomizer 中写入的
         Map<String, String> metadata = serviceInstance.getSortedMetadata();
-        String id = generateId(host, port);
+        String id = generateId(host, port);              // 获取ServiceInstance监听的host
+        // ZookeeperInstance 是 Curator ServiceInstance 的 payload
         ZookeeperInstance zookeeperInstance = new ZookeeperInstance(id, serviceName, metadata);
         try {
             builder = builder()

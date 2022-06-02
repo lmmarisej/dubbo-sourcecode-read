@@ -28,26 +28,28 @@ import java.util.Set;
 import static org.apache.dubbo.common.constants.CommonConstants.REGISTRY_DELAY_NOTIFICATION_KEY;
 
 /**
+ * 针对 ServiceInstance 的发布和订阅操作。
+ *
  * Defines the common operations of Service Discovery, extended and loaded by ServiceDiscoveryFactory
  */
 public interface ServiceDiscovery extends RegistryService, Prioritized {
 
-    void register() throws RuntimeException;
+    void register() throws RuntimeException;           // 发布传入的ServiceInstance实例
 
-    void update() throws RuntimeException;
+    void update() throws RuntimeException;         // 更新传入的ServiceInstance实例
 
-    void unregister() throws RuntimeException;
+    void unregister() throws RuntimeException;         // 注销传入的ServiceInstance实例
 
     /**
      * Gets all service names
      *
      * @return non-null read-only {@link Set}
      */
-    Set<String> getServices();
+    Set<String> getServices();          // 查询全部Service Name
 
-    List<ServiceInstance> getInstances(String serviceName) throws NullPointerException;
+    List<ServiceInstance> getInstances(String serviceName) throws NullPointerException;   // 根据ServiceName查询ServiceInstance
 
-    default void addServiceInstancesChangedListener(ServiceInstancesChangedListener listener)
+    default void addServiceInstancesChangedListener(ServiceInstancesChangedListener listener)     // 添加ServiceInstance监听器
             throws NullPointerException, IllegalArgumentException {
     }
 

@@ -45,6 +45,8 @@ import static org.apache.dubbo.registry.client.metadata.ServiceInstanceMetadataU
 import static org.apache.dubbo.registry.client.metadata.ServiceInstanceMetadataUtils.setMetadataStorageType;
 
 /**
+ * Dubbo 提供了多个 ServiceDiscovery 用来接入多种注册中心
+ *
  * Each service discovery is bond to one application.
  */
 public abstract class AbstractServiceDiscovery implements ServiceDiscovery {

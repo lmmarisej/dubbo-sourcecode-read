@@ -62,6 +62,8 @@ public class ZookeeperServiceDiscovery extends AbstractServiceDiscovery {
     private org.apache.curator.x.discovery.ServiceDiscovery<ZookeeperInstance> serviceDiscovery;
 
     /**
+     * zk 节点上的监听器
+     *
      * The Key is watched Zookeeper path, the value is an instance of {@link CuratorWatcher}
      */
     private final Map<String, ZookeeperServiceDiscoveryChangeWatcher> watcherCaches = new ConcurrentHashMap<>();
@@ -69,8 +71,9 @@ public class ZookeeperServiceDiscovery extends AbstractServiceDiscovery {
     public ZookeeperServiceDiscovery(ApplicationModel applicationModel, URL registryURL) {
         super(applicationModel, registryURL);
         try {
-            this.curatorFramework = buildCuratorFramework(registryURL);
-            this.rootPath = ROOT_PATH.getParameterValue(registryURL);
+            this.curatorFramework = buildCuratorFramework(registryURL);         // 初始化 CuratorFramework
+            this.rootPath = ROOT_PATH.getParameterValue(registryURL);           // 确定 rootPath，默认是 "/services"
+            // 初始化Curator ServiceDiscovery并启动
             this.serviceDiscovery = buildServiceDiscovery(curatorFramework, rootPath);
             this.serviceDiscovery.start();
         } catch (Exception e) {
@@ -102,11 +105,13 @@ public class ZookeeperServiceDiscovery extends AbstractServiceDiscovery {
 
     @Override
     public Set<String> getServices() {
+        // 查询 Service Name
         return doInServiceDiscovery(s -> new LinkedHashSet<>(s.queryForNames()));
     }
 
     @Override
     public List<ServiceInstance> getInstances(String serviceName) throws NullPointerException {
+        // serviceName 查询 Service Instance
         return doInServiceDiscovery(s -> build(registryURL, s.queryForInstances(serviceName)));
     }
 

@@ -37,6 +37,7 @@ public interface ExtensionAccessor {
         return extensionLoader != null ? extensionLoader.getAdaptiveExtension() : null;
     }
 
+    // 工具方法，用于获取接口的默认实现
     default <T> T getDefaultExtension(Class<T> type) {
         ExtensionLoader<T> extensionLoader = getExtensionLoader(type);
         return extensionLoader != null ? extensionLoader.getDefaultExtension() : null;
