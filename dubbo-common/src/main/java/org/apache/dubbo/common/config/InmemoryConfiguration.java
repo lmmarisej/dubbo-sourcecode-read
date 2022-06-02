@@ -20,7 +20,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 /**
- * In-memory configuration
+ * 从 store 集合中获取对应配置值
  */
 public class InmemoryConfiguration implements Configuration {
 

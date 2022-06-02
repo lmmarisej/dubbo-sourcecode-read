@@ -204,7 +204,7 @@ public final class DubboBootstrap {
     }
 
     /**
-     * Initialize
+     * dubbo 启动入口。
      */
     public void initialize() {
         applicationDeployer.initialize();

@@ -35,19 +35,28 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+/**
+ * 基础配置类
+ */
 public class Environment extends LifecycleAdapter implements ApplicationExt {
     private static final Logger logger = LoggerFactory.getLogger(Environment.class);
 
     public static final String NAME = "environment";
 
     // dubbo properties in classpath
+    // 全部配置以及环境变量或是 -D 参数中指定配置文件的相关配置信息。
     private PropertiesConfiguration propertiesConfiguration;
 
     // java system props (-D)
-    private SystemConfiguration systemConfiguration;
+    private SystemConfiguration systemConfiguration;        //  -D 参数中指定配置文件的相关配置信息。
 
     // java system environment
-    private EnvironmentConfiguration environmentConfiguration;
+    private EnvironmentConfiguration environmentConfiguration;  // 环境变量中直接添加的配置信息。
+
+    /*
+        使用 Spring 框架且将 include-spring-env 配置为 true 时，会自动从 Spring Environment 中读取配置。
+        默认依次读取 key 为 dubbo.properties 和 application.dubbo.properties 到这里两个 InmemoryConfiguration 对象中。
+     */
 
     // external config, such as config-center global/default config
     private InmemoryConfiguration externalConfiguration;
@@ -58,7 +67,7 @@ public class Environment extends LifecycleAdapter implements ApplicationExt {
     // local app config , such as Spring Environment/PropertySources/application.properties
     private InmemoryConfiguration appConfiguration;
 
-    protected CompositeConfiguration globalConfiguration;
+    protected CompositeConfiguration globalConfiguration;       // 用于组合上述各个配置来源。
 
     protected List<Map<String, String>> globalConfigurationMaps;
 
@@ -77,6 +86,7 @@ public class Environment extends LifecycleAdapter implements ApplicationExt {
 
     @Override
     public void initialize() throws IllegalStateException {
+        // 创建上述Configuration对象
         if (initialized.compareAndSet(false, true)) {
             this.propertiesConfiguration = new PropertiesConfiguration(scopeModel);
             this.systemConfiguration = new SystemConfiguration();
@@ -151,6 +161,7 @@ public class Environment extends LifecycleAdapter implements ApplicationExt {
 
     /**
      * Merge target map properties into app configuration
+     *
      * @param map
      */
     public void updateAppConfigMap(Map<String, String> map) {
@@ -171,8 +182,11 @@ public class Environment extends LifecycleAdapter implements ApplicationExt {
     public Configuration getPrefixedConfiguration(AbstractConfig config, String prefix) {
 
         // The sequence would be: SystemConfiguration -> EnvironmentConfiguration -> AppExternalConfiguration -> ExternalConfiguration  -> AppConfiguration -> AbstractConfig -> PropertiesConfiguration
+        // 将ConfigCenterConfig封装成ConfigConfigurationAdapter
         Configuration instanceConfiguration = new ConfigConfigurationAdapter(config, prefix);
+        // 创建CompositeConfiguration对象，这里的prefix和id是根据ConfigCenterConfig确定的
         CompositeConfiguration compositeConfiguration = new CompositeConfiguration();
+        // 按序组合已有Configuration对象以及ConfigCenterConfig
         compositeConfiguration.addConfiguration(systemConfiguration);
         compositeConfiguration.addConfiguration(environmentConfiguration);
         compositeConfiguration.addConfiguration(appExternalConfiguration);
@@ -206,6 +220,7 @@ public class Environment extends LifecycleAdapter implements ApplicationExt {
 
     /**
      * Get configuration map list for target instance
+     *
      * @param config
      * @param prefix
      * @return
@@ -229,6 +244,7 @@ public class Environment extends LifecycleAdapter implements ApplicationExt {
 
     /**
      * Get global configuration as map list
+     *
      * @return
      */
     public List<Map<String, String>> getConfigurationMaps() {

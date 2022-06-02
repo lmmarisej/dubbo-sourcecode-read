@@ -34,12 +34,12 @@ public interface OrderedPropertiesProvider {
      *
      * @return
      */
-    int priority();
+    int priority();     // 用于排序
 
     /**
      * load the properties
      *
      * @return
      */
-    Properties initProperties();
+    Properties initProperties();    // 获取Properties配置
 }

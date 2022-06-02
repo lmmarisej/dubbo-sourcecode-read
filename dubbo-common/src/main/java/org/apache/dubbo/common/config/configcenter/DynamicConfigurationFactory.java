@@ -26,6 +26,9 @@ import org.apache.dubbo.common.extension.SPI;
 @SPI(value = "nop", scope = ExtensionScope.APPLICATION) // 2.7.5 change the default SPI implementation
 public interface DynamicConfigurationFactory {
 
+    /**
+     * 从传入的配置中心 URL 参数中，解析出协议类型并获取对应的 DynamicConfigurationFactory 实现
+     */
     DynamicConfiguration getDynamicConfiguration(URL url);
 
 }

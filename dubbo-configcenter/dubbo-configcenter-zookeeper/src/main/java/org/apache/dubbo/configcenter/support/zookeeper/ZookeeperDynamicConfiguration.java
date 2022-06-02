@@ -40,10 +40,10 @@ import java.util.concurrent.TimeUnit;
  */
 public class ZookeeperDynamicConfiguration extends TreePathDynamicConfiguration {
 
-    private Executor executor;
-    private ZookeeperClient zkClient;
+    private Executor executor;          // 用于执行监听器的线程池。
+    private ZookeeperClient zkClient;       // 与 Zookeeper 集群交互的客户端。
 
-    private CacheListener cacheListener;
+    private CacheListener cacheListener;        // 用于监听配置变化的监听器。
     private static final int DEFAULT_ZK_EXECUTOR_THREADS_NUM = 1;
     private static final int DEFAULT_QUEUE = 10000;
     private static final Long THREAD_KEEP_ALIVE_TIME = 0L;
@@ -51,16 +51,17 @@ public class ZookeeperDynamicConfiguration extends TreePathDynamicConfiguration 
     ZookeeperDynamicConfiguration(URL url, ZookeeperTransporter zookeeperTransporter) {
         super(url);
 
-        this.cacheListener = new CacheListener(rootPath);
+        this.cacheListener = new CacheListener(rootPath); // 在 cacheListener 注册成功之后，会调用 cacheListener.countDown() 方法
 
         final String threadName = this.getClass().getSimpleName();
+        // 初始化 executor 字段，用于执行监听器的逻辑
         this.executor = new ThreadPoolExecutor(DEFAULT_ZK_EXECUTOR_THREADS_NUM, DEFAULT_ZK_EXECUTOR_THREADS_NUM,
             THREAD_KEEP_ALIVE_TIME, TimeUnit.MILLISECONDS,
             new LinkedBlockingQueue<>(DEFAULT_QUEUE),
             new NamedThreadFactory(threadName, true),
             new AbortPolicyWithReport(threadName, url));
 
-        zkClient = zookeeperTransporter.connect(url);
+        zkClient = zookeeperTransporter.connect(url);          // 初始化 Zookeeper 客户端
         boolean isConnected = zkClient.isConnected();
         if (!isConnected) {
             throw new IllegalStateException("Failed to connect with zookeeper, pls check if url " + url + " is correct.");
@@ -73,7 +74,7 @@ public class ZookeeperDynamicConfiguration extends TreePathDynamicConfiguration 
      */
     @Override
     public String getInternalProperty(String key) {
-        return zkClient.getContent(buildPathKey("", key));
+        return zkClient.getContent(buildPathKey("", key));   // 直接从 Zookeeper 中读取对应的 Key
     }
 
     @Override
@@ -97,7 +98,8 @@ public class ZookeeperDynamicConfiguration extends TreePathDynamicConfiguration 
             if (ticket != null && !(ticket instanceof Stat)) {
                 throw new IllegalArgumentException("zookeeper publishConfigCas requires stat type ticket");
             }
-            String pathKey = buildPathKey(group, key);
+            String pathKey = buildPathKey(group, key);       // getPathKey()方法中会添加rootPath和group两部分信息到Key中
+            // 在Zookeeper中创建对应ZNode节点用来存储配置信息
             zkClient.createOrUpdate(pathKey, content, false, ticket == null ? 0 : ((Stat) ticket).getVersion());
             return true;
         } catch (Exception e) {

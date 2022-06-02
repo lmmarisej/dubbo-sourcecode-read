@@ -43,7 +43,9 @@ public class ModuleEnvironment extends Environment implements ModuleExt {
 
     private Environment applicationDelegate;
 
-    private OrderedPropertiesConfiguration orderedPropertiesConfiguration;
+    private OrderedPropertiesConfiguration orderedPropertiesConfiguration;  // 全部 OrderedPropertiesProvider 实现提供的配置
+
+    // 用于组合当前全部的配置中心对应的 DynamicConfiguration。
 
     private CompositeConfiguration dynamicGlobalConfiguration;
 

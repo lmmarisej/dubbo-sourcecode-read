@@ -226,6 +226,9 @@ public class ApplicationModel extends ScopeModel {
         }
     }
 
+    /**
+     * 法初始化所有 ApplicationExt 接口实现
+     */
     private void initApplicationExts() {
         Set<ApplicationExt> exts = this.getExtensionLoader(ApplicationExt.class).getSupportedExtensionInstances();
         for (ApplicationExt ext : exts) {

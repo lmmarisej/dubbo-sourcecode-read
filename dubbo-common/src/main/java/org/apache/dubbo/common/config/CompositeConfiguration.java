@@ -25,6 +25,8 @@ import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
+ * 复合的 Configuration 对象，其核心就是将多个 Configuration 对象组合起来，对外表现为一个 Configuration 对象。
+ *
  * This is an abstraction specially customized for the sequence Dubbo retrieves properties.
  */
 public class CompositeConfiguration implements Configuration {
@@ -57,7 +59,7 @@ public class CompositeConfiguration implements Configuration {
     }
 
     public void addConfiguration(Configuration configuration) {
-        if (configList.contains(configuration)) {
+        if (configList.contains(configuration)) {       // 不会重复添加同一个Configuration对象
             return;
         }
         this.configList.add(configuration);
@@ -71,6 +73,9 @@ public class CompositeConfiguration implements Configuration {
         this.configList.add(pos, configuration);
     }
 
+    /**
+     * 遍历 configList 集合中的全部 Configuration 查询对应的 Key，返回第一个成功查询到的 Value 值
+     */
     @Override
     public Object getInternalProperty(String key) {
         for (Configuration config : configList) {

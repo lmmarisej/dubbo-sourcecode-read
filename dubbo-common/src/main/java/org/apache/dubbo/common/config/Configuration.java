@@ -21,6 +21,8 @@ import java.util.NoSuchElementException;
 import static org.apache.dubbo.common.config.ConfigurationUtils.isEmptyValue;
 
 /**
+ * Configuration 接口是 Dubbo 中所有配置的基础接口，定义了根据指定 Key 获取对应配置值的相关方法。
+ *
  * Configuration interface, to fetch the value for the specified key.
  */
 public interface Configuration {
@@ -125,7 +127,7 @@ public interface Configuration {
         return value != null ? value : defaultValue;
     }
 
-    Object getInternalProperty(String key);
+    Object getInternalProperty(String key);     // 获取配置值
 
     /**
      * Check if the configuration contains the specified key.
@@ -139,6 +141,9 @@ public interface Configuration {
     }
 
 
+    /**
+     * 将获取到的配置值转换成返回值的类型
+     */
     default <T> T convert(Class<T> cls, String key, T defaultValue) {
         // we only process String properties for now
         String value = (String) getProperty(key);

@@ -331,6 +331,7 @@ public class ConfigurationUtils {
      * @see 2.7.4
      */
     public static DynamicConfigurationFactory getDynamicConfigurationFactory(ExtensionAccessor extensionAccessor, String name) {
+        // 根据扩展名称获取 DynamicConfigurationFactory 实现
         ExtensionLoader<DynamicConfigurationFactory> loader = extensionAccessor.getExtensionLoader(DynamicConfigurationFactory.class);
         return loader.getOrDefaultExtension(name);
     }

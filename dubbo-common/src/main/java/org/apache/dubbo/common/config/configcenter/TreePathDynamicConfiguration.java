@@ -61,7 +61,7 @@ public abstract class TreePathDynamicConfiguration extends AbstractDynamicConfig
      */
     public static final String DEFAULT_CONFIG_BASE_PATH = "/config";
 
-    protected final String rootPath;
+    protected final String rootPath;    // 以 Zookeeper 作为配置中心时，配置也是以 ZNode 形式存储的，rootPath 记录了所有配置节点的根路径。
 
     public TreePathDynamicConfiguration(URL url) {
         super(url);
@@ -143,6 +143,7 @@ public abstract class TreePathDynamicConfiguration extends AbstractDynamicConfig
      */
     protected String getRootPath(URL url) {
 
+        // 根据URL中的config.namespace参数(默认值为dubbo)，确定配置中心ZNode的根路径
         String rootPath = url.getParameter(CONFIG_ROOT_PATH_PARAM_NAME, buildRootPath(url));
 
         rootPath = normalize(rootPath);

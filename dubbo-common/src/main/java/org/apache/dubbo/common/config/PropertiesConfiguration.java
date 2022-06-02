@@ -23,6 +23,8 @@ import java.util.Map;
 import java.util.Properties;
 
 /**
+ * 加载默认的 dubbo.properties.file 配置文件。
+ *
  * Configuration from system properties and dubbo.properties
  */
 public class PropertiesConfiguration implements Configuration {

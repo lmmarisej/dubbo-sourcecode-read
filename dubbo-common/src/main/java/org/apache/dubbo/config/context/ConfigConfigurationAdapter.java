@@ -24,16 +24,19 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
+ * AbstractConfig 与 Configuration 之间的适配器，将 AbstractConfig 对象转换成 Configuration 对象。
+ *
  * This class receives an {@link AbstractConfig} and exposes its attributes through {@link Configuration}
  */
 public class ConfigConfigurationAdapter implements Configuration {
 
-    private Map<String, String> metaData;
+    private Map<String, String> metaData;    // 获取该 AbstractConfig 对象中的全部字段与字段值的映射
 
     public ConfigConfigurationAdapter(AbstractConfig config, String prefix) {
         Map<String, String> configMetadata = config.getMetaData();
         if (StringUtils.hasText(prefix)) {
             metaData = new HashMap<>(configMetadata.size(), 1.0f);
+            // 根据 AbstractConfig 配置的 prefix 和 id，修改 metaData 集合中 Key 的名称
             for (Map.Entry<String, String> entry : configMetadata.entrySet()) {
                 metaData.put(prefix + "." + entry.getKey(), entry.getValue());
             }
@@ -42,6 +45,9 @@ public class ConfigConfigurationAdapter implements Configuration {
         }
     }
 
+    /**
+     * 直接从 metaData 集合中获取配置值
+     */
     @Override
     public Object getInternalProperty(String key) {
         return metaData.get(key);

@@ -20,6 +20,8 @@ package org.apache.dubbo.common.config;
 import java.util.Map;
 
 /**
+ * 从 Java Properties 配置（也就是 -D 配置参数）中获取相应的配置项
+ *
  * FIXME: is this really necessary? PropertiesConfiguration should have already covered this:
  *
  * @See ConfigUtils#getProperty(String)
@@ -29,7 +31,7 @@ public class SystemConfiguration implements Configuration {
 
     @Override
     public Object getInternalProperty(String key) {
-        return System.getProperty(key);
+        return System.getProperty(key);                 // 读取 -D 配置参数
     }
 
     public Map<String, String> getProperties() {

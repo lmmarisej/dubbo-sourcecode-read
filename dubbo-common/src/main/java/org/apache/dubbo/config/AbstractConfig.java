@@ -66,9 +66,9 @@ import static org.apache.dubbo.common.utils.ReflectUtils.findMethodByMethodSigna
 import static org.apache.dubbo.config.Constants.PARAMETERS;
 
 /**
- * Utility methods and public methods for parsing configuration
+ * 抽象实例对应的配置。
  *
- * @export
+ * Utility methods and public methods for parsing configuration
  */
 public abstract class AbstractConfig implements Serializable {
 
@@ -712,7 +712,7 @@ public abstract class AbstractConfig implements Serializable {
         // loop methods, get override value and set the new value back to method
         List<Method> methods = MethodUtils.getMethods(obj.getClass(), method -> method.getDeclaringClass() != Object.class);
         for (Method method : methods) {
-            if (MethodUtils.isSetter(method)) {
+            if (MethodUtils.isSetter(method)) {      // 获取ConfigCenterConfig中各个字段的setter方法
                 String propertyName = extractPropertyName(method.getName());
 
                 // if config mode is OVERRIDE_IF_ABSENT and property has set, skip
@@ -724,8 +724,10 @@ public abstract class AbstractConfig implements Serializable {
                 String kebabPropertyName = StringUtils.convertToSplitName(propertyName, "-");
 
                 try {
+                    // 根据配置中心的相关配置以及Environment中的各个Configuration，获取该字段的最终值
                     String value = StringUtils.trim(configuration.getString(kebabPropertyName));
                     // isTypeMatch() is called to avoid duplicate and incorrect update, for example, we have two 'setGeneric' methods in ReferenceConfig.
+                    // 调用setter方法更新ConfigCenterConfig的相应字段
                     if (StringUtils.hasText(value)
                         && ClassUtils.isTypeMatch(method.getParameterTypes()[0], value)
                         && !isIgnoredAttribute(obj.getClass(), propertyName)) {
@@ -737,7 +739,9 @@ public abstract class AbstractConfig implements Serializable {
                         obj.getClass().getSimpleName() +
                         ", please make sure every property has getter/setter method provided.");
                 }
-            } else if (isParametersSetter(method)) {
+            }
+            // 设置parameters字段，与设置其他字段的逻辑基本类似，但是实现有所不同
+            else if (isParametersSetter(method)) {
                 String propertyName = extractPropertyName(method.getName());
 
                 // get old map from original obj
@@ -750,7 +754,6 @@ public abstract class AbstractConfig implements Serializable {
                         oldMap = (Map) oldOne;
                     }
                 } catch (Exception ignore) {
-
                 }
 
                 String value = StringUtils.trim(configuration.getString(propertyName));
@@ -773,12 +776,12 @@ public abstract class AbstractConfig implements Serializable {
                 // if mode is OVERRIDE_ALL, put all keyed entries not in new map from old map to new map (ignore the same key appeared in old map)
                 // if mode is others, override with new map
                 if (overrideIfAbsent) {
-                    newMap.putAll(oldMap);
+                    newMap.putAll(oldMap);     // 覆盖parameters集合
                 } else if (overrideAll) {
                     oldMap.forEach(newMap::putIfAbsent);
                 }
 
-                invokeSetParameters(newMap, obj);
+                invokeSetParameters(newMap, obj);                // 设置parameters字段
             } else if (isNestedSetter(obj, method)) {
                 try {
                     Class<?> clazz = method.getParameterTypes()[0];

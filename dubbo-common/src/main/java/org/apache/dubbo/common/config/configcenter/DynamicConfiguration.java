@@ -25,6 +25,8 @@ import java.util.SortedSet;
 
 
 /**
+ * 动态配置的抽象，接口实现是动态配置中心的基础。
+ *
  * Dynamic Configuration
  * <br/>
  * From the use scenario internally inside framework, there're mainly three kinds of methods:
@@ -43,6 +45,8 @@ public interface DynamicConfiguration extends Configuration, AutoCloseable {
     String DEFAULT_GROUP = "dubbo";
 
     /**
+     * 添加或删除对指定配置的监听器。
+     *
      * {@link #addListener(String, String, ConfigurationListener)}
      *
      * @param key      the key to represent a configuration
@@ -108,6 +112,8 @@ public interface DynamicConfiguration extends Configuration, AutoCloseable {
     }
 
     /**
+     * 从配置中心获取指定的配置，在使用时，可以指定一个超时时间。
+     *
      * Get the configuration mapped to the given key and the given group. If the
      * configuration fails to fetch after timeout exceeds, IllegalStateException will be thrown.
      *
@@ -137,6 +143,8 @@ public interface DynamicConfiguration extends Configuration, AutoCloseable {
     }
 
     /**
+     * 发布一条配置信息。
+     *
      * Publish Config mapped to the given key under the {@link #getDefaultGroup() default group}
      *
      * @param key     the key to represent a configuration
@@ -153,7 +161,7 @@ public interface DynamicConfiguration extends Configuration, AutoCloseable {
      * Publish Config mapped to the given key and the given group.
      *
      * @param key     the key to represent a configuration
-     * @param group   the group where the key belongs to
+     * @param group   the group where the key belongs to    配置中心的配置可以按照 group 进行分组。
      * @param content the content of configuration
      * @return <code>true</code> if success, or <code>false</code>
      * @throws UnsupportedOperationException If the under layer does not support

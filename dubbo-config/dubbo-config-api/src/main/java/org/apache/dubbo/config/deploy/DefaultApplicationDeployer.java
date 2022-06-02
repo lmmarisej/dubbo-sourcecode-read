@@ -182,7 +182,7 @@ public class DefaultApplicationDeployer extends AbstractDeployer<ApplicationMode
             // register shutdown hook
             registerShutdownHook();
 
-            startConfigCenter();
+            startConfigCenter();        // 启动一个或多个配置中心客户端
 
             loadApplicationConfigs();
 
@@ -217,6 +217,9 @@ public class DefaultApplicationDeployer extends AbstractDeployer<ApplicationMode
         configManager.loadConfigs();
     }
 
+    /**
+     * 启动一个或多个配置中心客户端
+     */
     private void startConfigCenter() {
 
         // load application config
@@ -230,15 +233,15 @@ public class DefaultApplicationDeployer extends AbstractDeployer<ApplicationMode
         // load config centers
         configManager.loadConfigsOfTypeFromProps(ConfigCenterConfig.class);
 
-        useRegistryAsConfigCenterIfNecessary();
+        useRegistryAsConfigCenterIfNecessary();     // 配置中心初始化的后续流程
 
         // check Config Center
         Collection<ConfigCenterConfig> configCenters = configManager.getConfigCenters();
-        if (CollectionUtils.isEmpty(configCenters)) {
+        if (CollectionUtils.isEmpty(configCenters)) {    // 可能配置了多个配置中心
             ConfigCenterConfig configCenterConfig = new ConfigCenterConfig();
             configCenterConfig.setScopeModel(applicationModel);
-            configCenterConfig.refresh();
-            ConfigValidationUtils.validateConfigCenterConfig(configCenterConfig);
+            configCenterConfig.refresh();       // 刷新配置——根据最新的配置更新各个 AbstractConfig 对象的字段
+            ConfigValidationUtils.validateConfigCenterConfig(configCenterConfig);          // 检查配置中心的配置是否合法
             if (configCenterConfig.isValid()) {
                 configManager.addConfigCenter(configCenterConfig);
                 configCenters = configManager.getConfigCenters();
@@ -250,7 +253,9 @@ public class DefaultApplicationDeployer extends AbstractDeployer<ApplicationMode
             }
         }
 
+        // 将多个配置中心对应的 DynamicConfiguration 对象封装成一个 CompositeDynamicConfiguration 对象，并记录到 Environment.dynamicConfiguration 字段中。
         if (CollectionUtils.isNotEmpty(configCenters)) {
+            // 创建 CompositeDynamicConfiguration 对象，用于组装多个 DynamicConfiguration 对象
             CompositeDynamicConfiguration compositeDynamicConfiguration = new CompositeDynamicConfiguration();
             for (ConfigCenterConfig configCenter : configCenters) {
                 // Pass config from ConfigCenterBean to environment
@@ -258,8 +263,10 @@ public class DefaultApplicationDeployer extends AbstractDeployer<ApplicationMode
                 environment.updateAppExternalConfigMap(configCenter.getAppExternalConfiguration());
 
                 // Fetch config from remote config center
+                // 根据 ConfigCenterConfig 创建相应的 DynamicConfig 对象，并添加到 CompositeDynamicConfiguration 中
                 compositeDynamicConfiguration.addConfiguration(prepareEnvironment(configCenter));
             }
+            // 将 CompositeDynamicConfiguration 记录到 Environment 中的 dynamicConfiguration 字段
             environment.setDynamicConfiguration(compositeDynamicConfiguration);
         }
     }
@@ -293,6 +300,8 @@ public class DefaultApplicationDeployer extends AbstractDeployer<ApplicationMode
     }
 
     /**
+     * 检测当前 Dubbo 是否要将注册中心也作为一个配置中心使用（常见的注册中心，都可以直接作为配置中心使用，这样可以降低运维成本）。
+     *
      * For compatibility purpose, use registry as the default config center when
      * there's no config center specified explicitly and
      * useAsConfigCenter of registryConfig is null or true
@@ -300,14 +309,15 @@ public class DefaultApplicationDeployer extends AbstractDeployer<ApplicationMode
     private void useRegistryAsConfigCenterIfNecessary() {
         // we use the loading status of DynamicConfiguration to decide whether ConfigCenter has been initiated.
         if (environment.getDynamicConfiguration().isPresent()) {
-            return;
+            return;           // 如果当前配置中心已经初始化完成，则不会将注册中心作为配置中心
         }
 
         if (CollectionUtils.isNotEmpty(configManager.getConfigCenters())) {
-            return;
+            return;          // 明确指定了配置中心的配置，哪怕配置中心初始化失败，也不会将注册中心作为配置中心
         }
 
         // load registry
+        // 从 ConfigManager 中获取注册中心的配置（即RegistryConfig），并转换成配置中心的配置（即ConfigCenterConfig）
         configManager.loadConfigsOfTypeFromProps(RegistryConfig.class);
 
         List<RegistryConfig> defaultRegistries = configManager.getDefaultRegistries();
@@ -660,12 +670,16 @@ public class DefaultApplicationDeployer extends AbstractDeployer<ApplicationMode
         return false;
     }
 
+    /**
+     * 根据 ConfigCenterConfig 中的配置创建 DynamicConfiguration 对象。
+     */
     private DynamicConfiguration prepareEnvironment(ConfigCenterConfig configCenter) {
-        if (configCenter.isValid()) {
+        if (configCenter.isValid()) {           // 检查ConfigCenterConfig是否合法
             if (!configCenter.checkOrUpdateInitialized(true)) {
-                return null;
+                return null;         // 检查ConfigCenterConfig是否已初始化，这里不能重复初始化
             }
 
+            // 根据 ConfigCenterConfig 中的各个字段，拼接出配置中心的 URL，创建对应的 DynamicConfiguration 对象
             DynamicConfiguration dynamicConfiguration;
             try {
                 dynamicConfiguration = getDynamicConfiguration(configCenter.toUrl());
@@ -680,6 +694,7 @@ public class DefaultApplicationDeployer extends AbstractDeployer<ApplicationMode
             }
 
             if (StringUtils.isNotEmpty(configCenter.getConfigFile())) {
+                // 从配置中心获取 externalConfiguration 和 appExternalConfiguration，并进行覆盖
                 String configContent = dynamicConfiguration.getProperties(configCenter.getConfigFile(), configCenter.getGroup());
                 String appGroup = getApplication().getName();
                 String appConfigContent = null;
@@ -690,13 +705,14 @@ public class DefaultApplicationDeployer extends AbstractDeployer<ApplicationMode
                         );
                 }
                 try {
+                    // 更新 Environment
                     environment.updateExternalConfigMap(parseProperties(configContent));
                     environment.updateAppExternalConfigMap(parseProperties(appConfigContent));
                 } catch (IOException e) {
                     throw new IllegalStateException("Failed to parse configurations from Config Center.", e);
                 }
             }
-            return dynamicConfiguration;
+            return dynamicConfiguration;        // 返回通过该 ConfigCenterConfig 创建的 DynamicConfiguration 对象
         }
         return null;
     }

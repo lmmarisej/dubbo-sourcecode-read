@@ -34,6 +34,8 @@ import static org.apache.dubbo.common.constants.CommonConstants.PATH_SEPARATOR;
 
 public class CacheListener implements DataListener {
 
+    // 维护了一个 Map<String, Set> 集合（keyListeners 字段）用于记录所有添加的 ConfigurationListener 监听器
+    // Key 是配置信息在 Zookeeper 中存储的 path，Value 为该 path 上的监听器集合。
     private Map<String, Set<ConfigurationListener>> keyListeners = new ConcurrentHashMap<>();
     private String rootPath;
 

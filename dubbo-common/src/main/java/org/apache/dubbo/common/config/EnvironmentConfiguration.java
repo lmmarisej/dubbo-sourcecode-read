@@ -21,7 +21,7 @@ import org.apache.dubbo.common.utils.StringUtils;
 import java.util.Map;
 
 /**
- * Configuration from system environment
+ * 使用环境变量中获取相应的配置。
  */
 public class EnvironmentConfiguration implements Configuration {
 
@@ -29,7 +29,7 @@ public class EnvironmentConfiguration implements Configuration {
     public Object getInternalProperty(String key) {
         String value = System.getenv(key);
         if (StringUtils.isEmpty(value)) {
-            value = System.getenv(StringUtils.toOSStyleKey(key));
+            value = System.getenv(StringUtils.toOSStyleKey(key));           // 读取环境变量中获取相应的配置
         }
         return value;
     }

@@ -45,6 +45,8 @@ import static java.util.Optional.ofNullable;
 import static org.apache.dubbo.config.AbstractConfig.getTagName;
 
 /**
+ * 管理当前 Dubbo 节点中全部 AbstractConfig 对象
+ *
  * A lock-free config manager (through ConcurrentHashMap), for fast read operation.
  * The Write operation lock with sub configs map of config type, for safely check and add new config.
  */
